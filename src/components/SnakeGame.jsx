@@ -1,0 +1,381 @@
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+
+const GRID_SIZE = 20;
+const TICK_MS = 120;
+const STORAGE_KEY = "agch_snake_best";
+
+const createInitialSnake = () => {
+  const mid = Math.floor(GRID_SIZE / 2);
+  return [
+    { x: mid, y: mid },
+    { x: mid - 1, y: mid },
+    { x: mid - 2, y: mid },
+  ];
+};
+
+const spawnFood = (snake) => {
+  const occupied = new Set(snake.map((segment) => `${segment.x},${segment.y}`));
+  let x = 0;
+  let y = 0;
+  let guard = 0;
+
+  do {
+    x = Math.floor(Math.random() * GRID_SIZE);
+    y = Math.floor(Math.random() * GRID_SIZE);
+    guard += 1;
+  } while (occupied.has(`${x},${y}`) && guard < 200);
+
+  return { x, y };
+};
+
+export function SnakeGame({ onGameOver }) {
+  const canvasRef = useRef(null);
+  const boardSizeRef = useRef(0);
+  const cellSizeRef = useRef(0);
+  const snakeRef = useRef(createInitialSnake());
+  const foodRef = useRef(spawnFood(snakeRef.current));
+  const directionRef = useRef({ x: 1, y: 0 });
+  const nextDirectionRef = useRef({ x: 1, y: 0 });
+  const statusRef = useRef("idle");
+  const touchStartRef = useRef(null);
+  const lastSentScoreRef = useRef(null);
+  const scoreRef = useRef(0);
+
+  const [status, setStatus] = useState("idle");
+  const [score, setScore] = useState(0);
+  const [bestScore, setBestScore] = useState(0);
+
+  const draw = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const size = boardSizeRef.current;
+    if (!size) return;
+    const ctx = canvas.getContext("2d");
+    const cellSize = cellSizeRef.current || size / GRID_SIZE;
+
+    ctx.clearRect(0, 0, size, size);
+    ctx.fillStyle = "rgba(6, 8, 16, 0.72)";
+    ctx.fillRect(0, 0, size, size);
+
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.06)";
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= GRID_SIZE; i += 1) {
+      const pos = i * cellSize;
+      ctx.beginPath();
+      ctx.moveTo(pos, 0);
+      ctx.lineTo(pos, size);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(0, pos);
+      ctx.lineTo(size, pos);
+      ctx.stroke();
+    }
+
+    const food = foodRef.current;
+    if (food) {
+      ctx.fillStyle = "#ff9ffc";
+      ctx.fillRect(
+        food.x * cellSize + 2,
+        food.y * cellSize + 2,
+        cellSize - 4,
+        cellSize - 4
+      );
+    }
+
+    const snake = snakeRef.current;
+    snake.forEach((segment, index) => {
+      ctx.fillStyle = index === 0 ? "#f5f0ff" : "#6fd6ff";
+      ctx.fillRect(
+        segment.x * cellSize + 1,
+        segment.y * cellSize + 1,
+        cellSize - 2,
+        cellSize - 2
+      );
+    });
+  }, []);
+
+  const resetBoard = useCallback(() => {
+    const initialSnake = createInitialSnake();
+    snakeRef.current = initialSnake;
+    directionRef.current = { x: 1, y: 0 };
+    nextDirectionRef.current = { x: 1, y: 0 };
+    foodRef.current = spawnFood(initialSnake);
+    scoreRef.current = 0;
+    setScore(0);
+    draw();
+  }, [draw]);
+
+  const startGame = useCallback(
+    (initialDirection) => {
+      resetBoard();
+      lastSentScoreRef.current = null;
+      if (initialDirection) {
+        directionRef.current = initialDirection;
+        nextDirectionRef.current = initialDirection;
+      }
+      setStatus("running");
+    },
+    [resetBoard]
+  );
+
+  const finishGame = useCallback(() => {
+    setStatus("gameover");
+    if (typeof onGameOver === "function") {
+      const finalScore = scoreRef.current;
+      if (lastSentScoreRef.current !== finalScore) {
+        lastSentScoreRef.current = finalScore;
+        onGameOver(finalScore);
+      }
+    }
+  }, [onGameOver]);
+
+  const queueDirection = useCallback(
+    (next) => {
+      if (!next) return;
+      const current = directionRef.current;
+      if (current.x + next.x === 0 && current.y + next.y === 0) {
+        return;
+      }
+
+      nextDirectionRef.current = next;
+      if (statusRef.current !== "running") {
+        startGame(next);
+      }
+    },
+    [startGame]
+  );
+
+  const stepGame = useCallback(() => {
+    const direction = nextDirectionRef.current;
+    directionRef.current = direction;
+    const snake = snakeRef.current;
+    const head = snake[0];
+    const nextHead = { x: head.x + direction.x, y: head.y + direction.y };
+
+    if (
+      nextHead.x < 0 ||
+      nextHead.x >= GRID_SIZE ||
+      nextHead.y < 0 ||
+      nextHead.y >= GRID_SIZE
+    ) {
+      draw();
+      finishGame();
+      return;
+    }
+
+    const hitsSelf = snake.some(
+      (segment, index) =>
+        index !== 0 && segment.x === nextHead.x && segment.y === nextHead.y
+    );
+    if (hitsSelf) {
+      draw();
+      finishGame();
+      return;
+    }
+
+    const newSnake = [nextHead, ...snake];
+    const food = foodRef.current;
+    if (food && food.x === nextHead.x && food.y === nextHead.y) {
+      setScore((prev) => {
+        const next = prev + 1;
+        scoreRef.current = next;
+        return next;
+      });
+      foodRef.current = spawnFood(newSnake);
+    } else {
+      newSnake.pop();
+    }
+
+    snakeRef.current = newSnake;
+    draw();
+  }, [draw, finishGame]);
+
+  const handleKeyDown = useCallback(
+    (event) => {
+      const key = event.key.toLowerCase();
+      let next = null;
+
+      if (key === "arrowup" || key === "w") next = { x: 0, y: -1 };
+      if (key === "arrowdown" || key === "s") next = { x: 0, y: 1 };
+      if (key === "arrowleft" || key === "a") next = { x: -1, y: 0 };
+      if (key === "arrowright" || key === "d") next = { x: 1, y: 0 };
+
+      if (key === " " || key === "enter") {
+        if (statusRef.current !== "running") {
+          startGame();
+        }
+        return;
+      }
+
+      if (!next) return;
+      event.preventDefault();
+      queueDirection(next);
+    },
+    [queueDirection, startGame]
+  );
+
+  const handleTouchStart = useCallback((event) => {
+    const touch = event.touches[0];
+    if (!touch) return;
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+  }, []);
+
+  const handleTouchEnd = useCallback(
+    (event) => {
+      const start = touchStartRef.current;
+      const touch = event.changedTouches[0];
+      if (!start || !touch) return;
+
+      const dx = touch.clientX - start.x;
+      const dy = touch.clientY - start.y;
+      const absX = Math.abs(dx);
+      const absY = Math.abs(dy);
+
+      if (Math.max(absX, absY) < 18) return;
+
+      if (absX > absY) {
+        queueDirection({ x: dx > 0 ? 1 : -1, y: 0 });
+      } else {
+        queueDirection({ x: 0, y: dy > 0 ? 1 : -1 });
+      }
+    },
+    [queueDirection]
+  );
+
+  useEffect(() => {
+    statusRef.current = status;
+  }, [status]);
+
+  useEffect(() => {
+    const stored = typeof window !== "undefined" ? window.localStorage.getItem(STORAGE_KEY) : null;
+    const parsed = stored ? Number(stored) : 0;
+    if (!Number.isNaN(parsed) && parsed > 0) {
+      setBestScore(parsed);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (score > bestScore) {
+      setBestScore(score);
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(STORAGE_KEY, String(score));
+      }
+    }
+  }, [score, bestScore]);
+
+  useEffect(() => {
+    if (status !== "running") return undefined;
+    const interval = window.setInterval(stepGame, TICK_MS);
+    return () => window.clearInterval(interval);
+  }, [status, stepGame]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const size = Math.min(rect.width, rect.height);
+      const dpr = window.devicePixelRatio || 1;
+
+      canvas.width = size * dpr;
+      canvas.height = size * dpr;
+      const ctx = canvas.getContext("2d");
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      boardSizeRef.current = size;
+      cellSizeRef.current = size / GRID_SIZE;
+      draw();
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [draw]);
+
+  useEffect(() => {
+    resetBoard();
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleKeyDown, resetBoard]);
+
+  const actionLabel =
+    status === "running" ? "Jugando..." : status === "gameover" ? "Reintentar" : "Empezar";
+
+  const controlButtonClass =
+    "rounded-full border border-white/20 bg-[rgba(6,8,16,0.65)] px-3 py-2 text-[10px] uppercase tracking-[0.18em] text-white/70 transition hover:border-[#6fd6ff] hover:text-white";
+
+  return (
+    <div className="mt-4 flex w-full flex-col items-center">
+      <div className="flex w-full max-w-[520px] items-center justify-between text-[11px] uppercase tracking-[0.22em] text-white/60">
+        <span>Puntuacion: {score}</span>
+        <span>Record: {bestScore}</span>
+      </div>
+
+      <div className="mt-3 w-full max-w-[520px]">
+        <div
+          className="relative touch-none"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
+          <canvas
+            className="aspect-square w-full rounded-2xl border border-white/15"
+            ref={canvasRef}
+          />
+          {status !== "running" ? (
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-2xl bg-[rgba(4,6,12,0.55)] text-sm uppercase tracking-[0.2em] text-white/80">
+              {status === "gameover" ? "Game Over" : "Listo"}
+            </div>
+          ) : null}
+        </div>
+      </div>
+
+      <button
+        type="button"
+        onClick={() => startGame()}
+        className="mt-4 rounded-full border border-white/20 bg-[rgba(6,8,16,0.65)] px-4 py-2 text-[11px] uppercase tracking-[0.18em] text-white/80 transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[#6fd6ff] hover:bg-[rgba(14,22,38,0.85)] hover:text-white hover:shadow-[0_12px_28px_rgba(111,214,255,0.4)]"
+      >
+        {actionLabel}
+      </button>
+
+      <div className="mt-4 grid w-full max-w-[240px] grid-cols-3 gap-2 md:hidden">
+        <button
+          type="button"
+          onClick={() => queueDirection({ x: 0, y: -1 })}
+          className={`${controlButtonClass} col-start-2`}
+        >
+          Arriba
+        </button>
+        <button
+          type="button"
+          onClick={() => queueDirection({ x: -1, y: 0 })}
+          className={`${controlButtonClass} col-start-1 row-start-2`}
+        >
+          Izquierda
+        </button>
+        <button
+          type="button"
+          onClick={() => queueDirection({ x: 0, y: 1 })}
+          className={`${controlButtonClass} col-start-2 row-start-2`}
+        >
+          Abajo
+        </button>
+        <button
+          type="button"
+          onClick={() => queueDirection({ x: 1, y: 0 })}
+          className={`${controlButtonClass} col-start-3 row-start-2`}
+        >
+          Derecha
+        </button>
+      </div>
+
+      <p className="mt-3 text-xs text-white/60 md:hidden">
+        Desliza o usa botones para moverte.
+      </p>
+      <p className="mt-3 hidden text-xs text-white/60 md:block">
+        Flechas o WASD para moverte. Enter para empezar.
+      </p>
+    </div>
+  );
+}
