@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { GridScan } from "@/components/GridScan";
 
 const initialStatus = { type: "", message: "" };
 
-export default function VerificacionPage() {
+function VerificacionContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const safeNext = useMemo(() => {
@@ -306,5 +306,21 @@ export default function VerificacionPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+function VerificacionFallback() {
+  return (
+    <div className="relative flex min-h-screen items-center justify-center bg-[#07040f] px-6 py-12 text-[#f5f0ff]">
+      <p className="text-sm text-white/70">Cargando...</p>
+    </div>
+  );
+}
+
+export default function VerificacionPage() {
+  return (
+    <Suspense fallback={<VerificacionFallback />}>
+      <VerificacionContent />
+    </Suspense>
   );
 }
