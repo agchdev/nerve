@@ -12,6 +12,8 @@ const supabase =
       })
     : null;
 
+const normalizeDigits = (value) => String(value || "").replace(/\D/g, "");
+
 const verifyPassword = (password, storedHash) => {
   if (!storedHash || typeof storedHash !== "string") return false;
   const [scheme, salt, hash] = storedHash.split("$");
@@ -38,8 +40,7 @@ export async function POST(request) {
     return NextResponse.json({ error: "INVALID_JSON" }, { status: 400 });
   }
 
-  const telefono =
-    typeof payload?.telefono === "string" ? payload.telefono.trim() : "";
+  const telefono = normalizeDigits(payload?.telefono);
   const password = typeof payload?.password === "string" ? payload.password : "";
 
   if (!telefono || !password.trim()) {
@@ -83,7 +84,10 @@ export async function POST(request) {
   }
 
   return NextResponse.json(
-    { ok: true, usuario: { id: user.id, nombre: user.nombre } },
+    {
+      ok: true,
+      usuario: { id: user.id, nombre: user.nombre, telefono: user.telefono },
+    },
     { status: 200 }
   );
 }

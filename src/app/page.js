@@ -9,7 +9,8 @@ const initialStatus = { type: "", message: "" };
 export default function Home() {
   const [mode, setMode] = useState("register");
   const [nombre, setNombre] = useState("");
-  const [telefono, setTelefono] = useState("");
+  const [prefijo, setPrefijo] = useState("34");
+  const [telefonoLocal, setTelefonoLocal] = useState("");
   const [password, setPassword] = useState("");
   const [currentUser, setCurrentUser] = useState(null);
   const [showRanking, setShowRanking] = useState(false);
@@ -20,6 +21,8 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
 
   const isLogin = mode === "login";
+
+  const normalizeDigits = (value) => String(value || "").replace(/\D/g, "");
 
   const handleModeChange = (nextMode) => {
     if (nextMode === mode) return;
@@ -89,7 +92,7 @@ export default function Home() {
     setRankingStatus(initialStatus);
     setStatus(initialStatus);
     setNombre("");
-    setTelefono("");
+    setTelefonoLocal("");
     setPassword("");
   };
 
@@ -103,6 +106,8 @@ export default function Home() {
       if (parsed?.id) {
         setCurrentUser(parsed);
         setMode("login");
+        if (parsed?.prefijo) setPrefijo(parsed.prefijo);
+        if (parsed?.telefono_local) setTelefonoLocal(parsed.telefono_local);
       }
     } catch {
       window.localStorage.removeItem("agch_user");
@@ -114,10 +119,17 @@ export default function Home() {
     setStatus(initialStatus);
 
     const trimmedNombre = nombre.trim();
-    const trimmedTelefono = telefono.trim();
+    const prefixDigits = normalizeDigits(prefijo);
+    const phoneDigits = normalizeDigits(telefonoLocal);
+    const fullTelefono = `${prefixDigits}${phoneDigits}`;
     const rawPassword = password;
 
-    if (!trimmedTelefono || !rawPassword.trim() || (!isLogin && !trimmedNombre)) {
+    if (
+      !prefixDigits ||
+      !phoneDigits ||
+      !rawPassword.trim() ||
+      (!isLogin && !trimmedNombre)
+    ) {
       setStatus({
         type: "error",
         message: "Completa todos los campos antes de continuar.",
@@ -139,12 +151,12 @@ export default function Home() {
       const endpoint = isLogin ? "/api/login" : "/api/usuarios";
       const requestPayload = isLogin
         ? {
-            telefono: trimmedTelefono,
+            telefono: fullTelefono,
             password: rawPassword,
           }
         : {
             nombre: trimmedNombre,
-            telefono: trimmedTelefono,
+            telefono: fullTelefono,
             password: rawPassword,
           };
 
@@ -179,19 +191,28 @@ export default function Home() {
             : "Jugador registrado con éxito.",
         });
         if (isLogin) {
-          setCurrentUser(responseData?.usuario ?? null);
+          const userData = responseData?.usuario ?? null;
+          const enrichedUser = userData
+            ? {
+                ...userData,
+                telefono: userData.telefono ?? fullTelefono,
+                prefijo: prefixDigits,
+                telefono_local: phoneDigits,
+              }
+            : null;
+          setCurrentUser(enrichedUser);
           setShowRanking(false);
           setRanking([]);
           setRankingStatus(initialStatus);
-          if (responseData?.usuario && typeof window !== "undefined") {
+          if (enrichedUser && typeof window !== "undefined") {
             window.localStorage.setItem(
               "agch_user",
-              JSON.stringify(responseData.usuario)
+              JSON.stringify(enrichedUser)
             );
           }
         }
         setNombre("");
-        setTelefono("");
+        setTelefonoLocal("");
         setPassword("");
       }
     } catch (error) {
@@ -317,7 +338,7 @@ export default function Home() {
               {isLogin ? "Bienvenido de vuelta" : "Registro de jugadores"}
             </p>
             <h1 className="mt-3 font-[var(--font-press-start)] text-[40px] uppercase tracking-[0.2em] text-[#f5f0ff] drop-shadow-[0_0_26px_rgba(255,159,252,0.55)] sm:text-[52px]">
-              ALEX GAMES
+              AGCH GAMES
             </h1>
             <p className="mt-2 max-w-[420px] text-sm leading-6 text-white/70">
               {isLogin
@@ -381,16 +402,43 @@ export default function Home() {
                 >
                   Teléfono
                 </label>
-                <input
-                  id="telefono"
-                  name="telefono"
-                  type="tel"
-                  className="w-full rounded-xl border border-white/20 bg-[rgba(6,8,16,0.7)] px-3.5 py-3 text-[15px] text-[#f5f0ff] transition focus:border-[#6fd6ff] focus:outline-none focus:ring-1 focus:ring-[#6fd6ff]"
-                  value={telefono}
-                  onChange={(event) => setTelefono(event.target.value)}
-                  autoComplete="tel"
-                  required
-                />
+                <div className="grid gap-3 sm:grid-cols-[110px_1fr]">
+                  <div>
+                    <span className="text-[10px] uppercase tracking-[0.18em] text-white/60">
+                      Prefijo
+                    </span>
+                    <div className="mt-2 flex items-center rounded-xl border border-white/20 bg-[rgba(6,8,16,0.7)] px-3">
+                      <span className="text-sm text-white/60">+</span>
+                      <input
+                        id="prefijo"
+                        name="prefijo"
+                        type="tel"
+                        inputMode="numeric"
+                        className="w-full bg-transparent py-3 pl-2 text-[15px] text-[#f5f0ff] outline-none"
+                        value={prefijo}
+                        onChange={(event) => setPrefijo(event.target.value)}
+                        placeholder="34"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase tracking-[0.18em] text-white/60">
+                      Numero
+                    </span>
+                    <input
+                      id="telefono"
+                      name="telefono"
+                      type="tel"
+                      inputMode="numeric"
+                      className="mt-2 w-full rounded-xl border border-white/20 bg-[rgba(6,8,16,0.7)] px-3.5 py-3 text-[15px] text-[#f5f0ff] transition focus:border-[#6fd6ff] focus:outline-none focus:ring-1 focus:ring-[#6fd6ff]"
+                      value={telefonoLocal}
+                      onChange={(event) => setTelefonoLocal(event.target.value)}
+                      autoComplete="tel"
+                      required
+                    />
+                  </div>
+                </div>
               </div>
 
               <div className="space-y-2">

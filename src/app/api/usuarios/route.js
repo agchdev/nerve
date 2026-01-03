@@ -13,6 +13,7 @@ const supabase =
     : null;
 
 const MIN_PASSWORD_LENGTH = 8;
+const normalizeDigits = (value) => String(value || "").replace(/\D/g, "");
 
 const hashPassword = (password) => {
   const salt = randomBytes(16).toString("hex");
@@ -37,8 +38,7 @@ export async function POST(request) {
 
   const nombre =
     typeof payload?.nombre === "string" ? payload.nombre.trim() : "";
-  const telefono =
-    typeof payload?.telefono === "string" ? payload.telefono.trim() : "";
+  const telefono = normalizeDigits(payload?.telefono);
   const rawPassword =
     typeof payload?.password === "string" ? payload.password : "";
 
