@@ -11,7 +11,7 @@ const supabase =
       })
     : null;
 
-export async function GET() {
+export async function GET(request) {
   if (!supabase) {
     return NextResponse.json(
       { error: "SUPABASE_NOT_CONFIGURED" },
@@ -19,10 +19,22 @@ export async function GET() {
     );
   }
 
-  const { data, error } = await supabase
+  const { searchParams } = new URL(request.url);
+  const gameId = searchParams.get("gameId")?.trim();
+
+  let query = supabase
     .from("puntuaciones")
-    .select("puntuacion_max, tiempopartida_max, id_usuario, usuarios ( id, nombre )")
-    .order("puntuacion_max", { ascending: false });
+    .select(
+      "puntuacion_max, tiempopartida_max, id_usuario, usuarios ( id, nombre )"
+    );
+
+  if (gameId) {
+    query = query.eq("id_juego", gameId);
+  }
+
+  const { data, error } = await query.order("puntuacion_max", {
+    ascending: false,
+  });
 
   if (error) {
     return NextResponse.json(

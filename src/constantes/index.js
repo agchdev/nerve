@@ -273,4 +273,10 @@ export const MINIGAMES = [
     description: "El clasico de habilidad con controles tactiles.",
     href: "/minijuego/snake",
   },
+  {
+    id: "jumpcube",
+    name: "JumpCube",
+    description: "Salta entre obstaculos y supera tu record.",
+    href: "/minijuego/jumpcube",
+  },
 ];

@@ -2,6 +2,7 @@
 
 import {
   COUNTRY_PREFIXES,
+  MINIGAMES,
   MIN_PASSWORD_LENGTH,
   initialStatus,
   passwordChecksFor,
@@ -11,13 +12,28 @@ import { CoinsBadge } from "@/components/CoinsBadge";
 import { GridScan } from "@/components/GridScan";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const formatTiempo = (value) => {
-  const total = Number.isFinite(value) && value >= 0 ? Math.floor(value) : 0;
+  if (!Number.isFinite(value) || value <= 0) return "No marcado";
+  const total = Math.floor(value);
   const minutes = Math.floor(total / 60);
   const seconds = total % 60;
   return `${minutes}:${String(seconds).padStart(2, "0")}`;
+};
+
+const gameNameBySlug = MINIGAMES.reduce((acc, game) => {
+  acc[game.id] = game.name;
+  return acc;
+}, {});
+
+const formatGameName = (slug) => {
+  if (!slug) return "Juego";
+  const known = gameNameBySlug[slug];
+  if (known) return known;
+  return slug
+    .replace(/[-_]/g, " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
 };
 
 export default function Home() {
@@ -35,8 +51,18 @@ export default function Home() {
   const [ranking, setRanking] = useState([]);
   const [rankingStatus, setRankingStatus] = useState(initialStatus);
   const [isRankingLoading, setIsRankingLoading] = useState(false);
+  const [rankingPage, setRankingPage] = useState(1);
+  const [rankingPageSize, setRankingPageSize] = useState(6);
+  const [games, setGames] = useState([]);
+  const [gamesStatus, setGamesStatus] = useState(initialStatus);
+  const [isGamesLoading, setIsGamesLoading] = useState(false);
+  const [selectedGameId, setSelectedGameId] = useState("");
+  const [isGameMenuOpen, setIsGameMenuOpen] = useState(false);
   const [status, setStatus] = useState(initialStatus);
   const [isLoading, setIsLoading] = useState(false);
+  const gameMenuRef = useRef(null);
+  const isMountedRef = useRef(true);
+  const gamesLoadingRef = useRef(false);
 
   const isLogin = mode === "login";
 
@@ -49,6 +75,12 @@ export default function Home() {
     setShowRanking(false);
     setRanking([]);
     setRankingStatus(initialStatus);
+    setRankingPage(1);
+    setGames([]);
+    setGamesStatus(initialStatus);
+    setSelectedGameId("");
+    setIsGamesLoading(false);
+    setIsGameMenuOpen(false);
     if (nextMode === "register") {
       setCurrentUser(null);
       if (typeof window !== "undefined") {
@@ -60,46 +92,11 @@ export default function Home() {
     setShowConfirmPassword(false);
   };
 
-  const handleShowRanking = async () => {
+  const handleShowRanking = () => {
     setShowRanking(true);
-    if (isRankingLoading || ranking.length) return;
-
-    setIsRankingLoading(true);
+    setRanking([]);
     setRankingStatus(initialStatus);
-
-    try {
-      const response = await fetch("/api/clasificacion");
-      const responseData = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        setRankingStatus({
-          type: "error",
-          message: "No se pudo cargar la clasificación.",
-        });
-        setRanking([]);
-        return;
-      }
-
-      const items = Array.isArray(responseData?.items)
-        ? responseData.items
-        : [];
-      setRanking(items);
-
-      if (!items.length) {
-        setRankingStatus({
-          type: "info",
-          message: "Aún no hay puntuaciones.",
-        });
-      }
-    } catch (error) {
-      setRankingStatus({
-        type: "error",
-        message: "No se pudo cargar la clasificación.",
-      });
-      setRanking([]);
-    } finally {
-      setIsRankingLoading(false);
-    }
+    setRankingPage(1);
   };
 
   useEffect(() => {
@@ -150,6 +147,195 @@ export default function Home() {
       isMounted = false;
     };
   }, [currentUser, router]);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isGameMenuOpen) return;
+    const handleOutside = (event) => {
+      if (!gameMenuRef.current) return;
+      if (gameMenuRef.current.contains(event.target)) return;
+      setIsGameMenuOpen(false);
+    };
+
+    document.addEventListener("mousedown", handleOutside);
+    document.addEventListener("touchstart", handleOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleOutside);
+      document.removeEventListener("touchstart", handleOutside);
+    };
+  }, [isGameMenuOpen]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const updatePageSize = () => {
+      const height = window.innerHeight || 0;
+      const nextSize =
+        height < 600 ? 4 : height < 720 ? 5 : height < 900 ? 6 : 8;
+      setRankingPageSize(nextSize);
+    };
+
+    updatePageSize();
+    window.addEventListener("resize", updatePageSize);
+    return () => {
+      window.removeEventListener("resize", updatePageSize);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!showRanking || games.length || gamesLoadingRef.current) return;
+
+    const fetchGames = async () => {
+      gamesLoadingRef.current = true;
+      if (isMountedRef.current) {
+        setIsGamesLoading(true);
+        setGamesStatus(initialStatus);
+      }
+      try {
+        const response = await fetch("/api/juegos");
+        const responseData = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          if (isMountedRef.current) {
+            setGames([]);
+            setGamesStatus({
+              type: "error",
+              message: "No se pudieron cargar los juegos.",
+            });
+          }
+          return;
+        }
+
+        const items = Array.isArray(responseData?.items)
+          ? responseData.items
+          : [];
+        const normalized = items
+          .map((item) => {
+            const slug =
+              typeof item.slug === "string" ? item.slug.trim() : "";
+            const imageUrl =
+              typeof item.image_url === "string"
+                ? item.image_url.trim()
+                : "";
+            return {
+              id: item.id,
+              slug,
+              name: formatGameName(slug),
+              imageUrl,
+            };
+          })
+          .filter((item) => Boolean(item.id));
+
+        if (isMountedRef.current) {
+          setGames(normalized);
+          if (!normalized.length) {
+            setGamesStatus({
+              type: "info",
+              message: "No hay juegos disponibles.",
+            });
+          } else {
+            setSelectedGameId((prev) => {
+              if (normalized.some((game) => game.id === prev)) {
+                return prev;
+              }
+              return normalized[0]?.id ?? "";
+            });
+          }
+        }
+      } catch (error) {
+        if (isMountedRef.current) {
+          setGames([]);
+          setGamesStatus({
+            type: "error",
+            message: "No se pudieron cargar los juegos.",
+          });
+        }
+      } finally {
+        gamesLoadingRef.current = false;
+        if (isMountedRef.current) {
+          setIsGamesLoading(false);
+        }
+      }
+    };
+
+    fetchGames();
+  }, [showRanking, games.length]);
+
+  useEffect(() => {
+    if (!showRanking || !selectedGameId) return;
+    let isMounted = true;
+
+    const fetchRanking = async () => {
+      setIsRankingLoading(true);
+      setRankingStatus(initialStatus);
+      setRanking([]);
+      try {
+        const response = await fetch(
+          `/api/clasificacion?gameId=${encodeURIComponent(selectedGameId)}`
+        );
+        const responseData = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          if (isMounted) {
+            setRankingStatus({
+              type: "error",
+              message: "No se pudo cargar la clasificación.",
+            });
+            setRanking([]);
+          }
+          return;
+        }
+
+        const items = Array.isArray(responseData?.items)
+          ? responseData.items
+          : [];
+        if (isMounted) {
+          setRanking(items);
+          if (!items.length) {
+            setRankingStatus({
+              type: "info",
+              message: "Aún no hay puntuaciones.",
+            });
+          }
+        }
+      } catch (error) {
+        if (isMounted) {
+          setRankingStatus({
+            type: "error",
+            message: "No se pudo cargar la clasificación.",
+          });
+          setRanking([]);
+        }
+      } finally {
+        if (isMounted) {
+          setIsRankingLoading(false);
+        }
+      }
+    };
+
+    fetchRanking();
+    return () => {
+      isMounted = false;
+    };
+  }, [showRanking, selectedGameId]);
+
+  useEffect(() => {
+    if (!showRanking) {
+      setIsGameMenuOpen(false);
+    }
+  }, [showRanking]);
+
+  useEffect(() => {
+    if (!showRanking) {
+      setRankingPage(1);
+      return;
+    }
+    setRankingPage(1);
+  }, [showRanking, selectedGameId]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -277,9 +463,36 @@ export default function Home() {
     }
   };
 
+  const selectedGame =
+    games.find((game) => game.id === selectedGameId) || null;
+  const totalRankingPages = Math.max(
+    1,
+    Math.ceil(ranking.length / rankingPageSize)
+  );
+  const currentRankingPage = Math.min(rankingPage, totalRankingPages);
+  const rankingOffset = (currentRankingPage - 1) * rankingPageSize;
+  const pagedRanking = ranking.slice(
+    (currentRankingPage - 1) * rankingPageSize,
+    currentRankingPage * rankingPageSize
+  );
+  const rankingEmptyMessage = isGamesLoading
+    ? "Cargando juegos..."
+    : gamesStatus.message && !games.length
+    ? gamesStatus.message
+    : selectedGameId
+    ? rankingStatus.message || "Aún no hay puntuaciones."
+    : "Selecciona un juego para ver la clasificación.";
+  const containerClassName = `relative flex ${
+    showRanking ? "h-screen" : "min-h-screen"
+  } items-center justify-center overflow-hidden bg-[#07040f] px-6 ${
+    showRanking ? "py-6 sm:py-8" : "py-12"
+  } text-[#f5f0ff]`;
+  const mainClassName = `relative z-10 flex w-full max-w-[520px] flex-col items-center text-center ${
+    showRanking ? "h-full" : ""
+  }`;
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#07040f] px-6 py-12 text-[#f5f0ff]">
+    <div className={containerClassName}>
       <div className="absolute inset-0 z-0" aria-hidden="true">
         <GridScan
           sensitivity={0.005}
@@ -298,14 +511,14 @@ export default function Home() {
 
       <CoinsBadge userId={currentUser?.id} />
 
-      <main className="relative z-10 flex w-full max-w-[520px] flex-col items-center text-center">
+      <main className={mainClassName}>
         {isLogin && currentUser ? (
           <>
             <h1 className="font-[var(--font-press-start)] text-[40px] uppercase tracking-[0.2em] text-[#f5f0ff] drop-shadow-[0_0_26px_rgba(255,159,252,0.55)] sm:text-[52px]">
               ALEX GAMES
             </h1>
             {showRanking ? (
-              <div className="mt-8 w-full max-w-[420px] text-center">
+              <div className="mt-6 flex w-full max-w-[420px] flex-1 flex-col text-center">
                 <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.22em] text-white/60">
                   <span>Clasificación</span>
                   <div className="flex items-center gap-3">
@@ -325,49 +538,171 @@ export default function Home() {
                   </div>
                 </div>
 
-                {isRankingLoading ? (
-                  <p className="mt-4 text-sm text-white/70">
-                    Cargando clasificación...
-                  </p>
-                ) : ranking.length ? (
-                  <ol className="mt-4 space-y-2 text-left">
-                    {ranking.map((item, index) => (
-                      <li
-                        key={item.id}
-                        className={`flex items-center justify-between rounded-xl border bg-[rgba(6,8,16,0.6)] px-4 py-3 text-sm ${
-                          index === 0
-                            ? "border-[#d4af37]"
-                            : index === 1
-                            ? "border-[#c0c0c0]"
-                            : index === 2
-                            ? "border-[#cd7f32]"
-                            : "border-white/10"
-                        }`}
+                <div className="mt-4 w-full text-left" ref={gameMenuRef}>
+                  <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.18em] text-white/60">
+                    <span>Juego</span>
+                    {isGamesLoading ? (
+                      <span className="text-white/50">Cargando...</span>
+                    ) : null}
+                  </div>
+                  <div className="relative mt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!games.length || isGamesLoading) return;
+                        setIsGameMenuOpen((prev) => !prev);
+                      }}
+                      className="flex w-full items-center justify-between rounded-xl border border-white/20 bg-[rgba(6,8,16,0.7)] px-3 py-2 text-left text-[12px] uppercase tracking-[0.16em] text-white/80 transition duration-200 ease-out hover:border-[#6fd6ff] hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+                      aria-haspopup="listbox"
+                      aria-expanded={isGameMenuOpen}
+                      disabled={!games.length || isGamesLoading}
+                    >
+                      <span className="flex min-w-0 items-center gap-3">
+                        {selectedGame?.imageUrl ? (
+                          <img
+                            src={selectedGame.imageUrl}
+                            alt={`Imagen de ${selectedGame.name}`}
+                            className="h-8 w-8 flex-shrink-0 rounded-lg object-cover"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg border border-white/15 bg-[rgba(8,10,18,0.7)] text-[10px] uppercase tracking-[0.18em] text-white/50">
+                            {selectedGame?.name
+                              ? selectedGame.name.slice(0, 1)
+                              : "?"}
+                          </span>
+                        )}
+                        <span className="truncate">
+                          {selectedGame?.name || "Selecciona juego"}
+                        </span>
+                      </span>
+                      <span className="text-white/50">▾</span>
+                    </button>
+
+                    {isGameMenuOpen && games.length ? (
+                      <div
+                        className="absolute z-20 mt-2 w-full overflow-hidden rounded-xl border border-white/15 bg-[rgba(6,8,16,0.96)] shadow-[0_18px_40px_rgba(0,0,0,0.45)]"
+                        role="listbox"
                       >
-                        <div className="flex items-center gap-3">
-                          <span className="text-xs text-white/50">
-                            {String(index + 1).padStart(2, "0")}
-                          </span>
-                          <span className="text-white/90">
-                            {item.nombre || "Jugador"}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 whitespace-nowrap">
-                          <span className="text-[#ff9ffc]">
-                            {item.puntuacion}
-                          </span>
-                          <span className="text-[10px] uppercase tracking-[0.18em] text-white/50">
-                            {formatTiempo(item.tiempo)}
-                          </span>
-                        </div>
-                      </li>
-                    ))}
-                  </ol>
-                ) : (
-                  <p className="mt-4 text-sm text-white/70">
-                    {rankingStatus.message || "Aún no hay puntuaciones."}
-                  </p>
-                )}
+                        <ul className="max-h-60 overflow-auto py-1">
+                          {games.map((game) => (
+                            <li key={game.id}>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedGameId(game.id);
+                                  setIsGameMenuOpen(false);
+                                }}
+                                className={`flex w-full items-center gap-3 px-3 py-2 text-left text-[12px] uppercase tracking-[0.16em] text-white/80 transition duration-150 hover:bg-[rgba(111,214,255,0.12)] hover:text-white ${
+                                  game.id === selectedGameId
+                                    ? "bg-[rgba(255,159,252,0.18)] text-white"
+                                    : ""
+                                }`}
+                              >
+                                {game.imageUrl ? (
+                                  <img
+                                    src={game.imageUrl}
+                                    alt={`Imagen de ${game.name}`}
+                                    className="h-8 w-8 flex-shrink-0 rounded-lg object-cover"
+                                    loading="lazy"
+                                  />
+                                ) : (
+                                  <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg border border-white/15 bg-[rgba(8,10,18,0.7)] text-[10px] uppercase tracking-[0.18em] text-white/50">
+                                    {game.name.slice(0, 1)}
+                                  </span>
+                                )}
+                                <span className="truncate">{game.name}</span>
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+
+                <div className="mt-4 flex-1 min-h-0 overflow-hidden">
+                  {isRankingLoading ? (
+                    <div className="flex h-full items-center justify-center">
+                      <p className="text-sm text-white/70">
+                        Cargando clasificación...
+                      </p>
+                    </div>
+                  ) : ranking.length ? (
+                    <ol className="space-y-2 text-left">
+                      {pagedRanking.map((item, index) => (
+                        <li
+                          key={item.id}
+                          className={`flex items-center justify-between rounded-xl border px-4 py-3 text-sm ${
+                            index + rankingOffset === 0
+                              ? "border-[#d4af37] bg-[rgba(212,175,55,0.16)]"
+                              : index + rankingOffset === 1
+                              ? "border-[#c0c0c0] bg-[rgba(192,192,192,0.14)]"
+                              : index + rankingOffset === 2
+                              ? "border-[#cd7f32] bg-[rgba(205,127,50,0.14)]"
+                              : "border-white/10 bg-[rgba(6,8,16,0.6)]"
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="text-xs text-white/50">
+                              {String(index + 1 + rankingOffset).padStart(
+                                2,
+                                "0"
+                              )}
+                            </span>
+                            <span className="text-white/90">
+                              {item.nombre || "Jugador"}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 whitespace-nowrap">
+                            <span className="text-[#ff9ffc]">
+                              {item.puntuacion}
+                            </span>
+                            <span className="text-[10px] uppercase tracking-[0.18em] text-white/50">
+                              Tiempo: {formatTiempo(item.tiempo)}
+                            </span>
+                          </div>
+                        </li>
+                      ))}
+                    </ol>
+                  ) : (
+                    <div className="flex h-full items-center justify-center">
+                      <p className="text-sm text-white/70">
+                        {rankingEmptyMessage}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {ranking.length > rankingPageSize ? (
+                  <div className="mt-4 flex items-center justify-between text-[10px] uppercase tracking-[0.18em] text-white/60">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setRankingPage(Math.max(1, currentRankingPage - 1))
+                      }
+                      className="rounded-full border border-white/15 bg-[rgba(6,8,16,0.65)] px-3 py-1 text-white/70 transition duration-200 hover:border-[#6fd6ff] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                      disabled={currentRankingPage <= 1}
+                    >
+                      Anterior
+                    </button>
+                    <span>
+                      Página {currentRankingPage} / {totalRankingPages}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setRankingPage(
+                          Math.min(totalRankingPages, currentRankingPage + 1)
+                        )
+                      }
+                      className="rounded-full border border-white/15 bg-[rgba(6,8,16,0.65)] px-3 py-1 text-white/70 transition duration-200 hover:border-[#ff9ffc] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                      disabled={currentRankingPage >= totalRankingPages}
+                    >
+                      Siguiente
+                    </button>
+                  </div>
+                ) : null}
               </div>
             ) : (
               <div className="mt-8 w-full max-w-[360px] space-y-3">

@@ -92,24 +92,38 @@ export default function MinijuegosPage() {
     const fetchMeta = async () => {
       setIsMetaLoading(true);
       try {
-        const response = await fetch("/api/juegos/snake");
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok) return;
+        const results = await Promise.all(
+          MINIGAMES.map(async (game) => {
+            try {
+              const response = await fetch(`/api/juegos/${game.id}`);
+              const data = await response.json().catch(() => ({}));
+              return { gameId: game.id, ok: response.ok, data };
+            } catch (error) {
+              return { gameId: game.id, ok: false, data: null };
+            }
+          })
+        );
 
-        const priceValue = Number(data?.game?.preciopartida);
-        const imageValue =
-          typeof data?.game?.image_url === "string"
-            ? data.game.image_url.trim()
-            : "";
+        const nextPrices = {};
+        const nextImages = {};
+
+        results.forEach((result) => {
+          if (!result.ok) return;
+          const priceValue = Number(result?.data?.game?.preciopartida);
+          const imageValue =
+            typeof result?.data?.game?.image_url === "string"
+              ? result.data.game.image_url.trim()
+              : "";
+
+          nextPrices[result.gameId] = Number.isFinite(priceValue)
+            ? priceValue
+            : null;
+          nextImages[result.gameId] = imageValue ? imageValue : null;
+        });
+
         if (isMounted) {
-          setGamePrices((prev) => ({
-            ...prev,
-            snake: Number.isFinite(priceValue) ? priceValue : null,
-          }));
-          setGameImages((prev) => ({
-            ...prev,
-            snake: imageValue ? imageValue : null,
-          }));
+          setGamePrices((prev) => ({ ...prev, ...nextPrices }));
+          setGameImages((prev) => ({ ...prev, ...nextImages }));
         }
       } catch (error) {
         // ignore, fallback to "Sin precio"
