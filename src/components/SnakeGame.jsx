@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 const GRID_SIZE = 20;
-const TICK_MS = 120;
+const TICK_MS = 160;
 const STORAGE_KEY = "agch_snake_best";
 
 const createInitialSnake = () => {
@@ -304,7 +304,7 @@ export function SnakeGame({ onGameOver }) {
     status === "running" ? "Jugando..." : status === "gameover" ? "Reintentar" : "Empezar";
 
   const controlButtonClass =
-    "rounded-full border border-white/20 bg-[rgba(6,8,16,0.65)] px-3 py-2 text-[10px] uppercase tracking-[0.18em] text-white/70 transition hover:border-[#6fd6ff] hover:text-white";
+    "flex h-12 w-12 items-center justify-center rounded-full border border-white/20 bg-[rgba(6,8,16,0.65)] text-lg font-semibold text-white/80 transition hover:border-[#6fd6ff] hover:text-white";
 
   return (
     <div className="mt-4 flex w-full flex-col items-center">
@@ -345,28 +345,28 @@ export function SnakeGame({ onGameOver }) {
           onClick={() => queueDirection({ x: 0, y: -1 })}
           className={`${controlButtonClass} col-start-2`}
         >
-          Arriba
+          &uarr;
         </button>
         <button
           type="button"
           onClick={() => queueDirection({ x: -1, y: 0 })}
           className={`${controlButtonClass} col-start-1 row-start-2`}
         >
-          Izquierda
+          &larr;
         </button>
         <button
           type="button"
           onClick={() => queueDirection({ x: 0, y: 1 })}
           className={`${controlButtonClass} col-start-2 row-start-2`}
         >
-          Abajo
+          &darr;
         </button>
         <button
           type="button"
           onClick={() => queueDirection({ x: 1, y: 0 })}
           className={`${controlButtonClass} col-start-3 row-start-2`}
         >
-          Derecha
+          &rarr;
         </button>
       </div>
 
