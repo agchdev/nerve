@@ -1,11 +1,10 @@
 "use client";
 
+import { initialStatus } from "@/constantes";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { GridScan } from "@/components/GridScan";
-
-const initialStatus = { type: "", message: "" };
 
 function VerificacionContent() {
   const router = useRouter();
@@ -68,6 +67,7 @@ function VerificacionContent() {
       isMounted = false;
     };
   }, [isAuthReady, router, safeNext, user]);
+
 
   const handleSendCode = useCallback(async () => {
     if (!user?.id) return;

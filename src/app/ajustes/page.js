@@ -1,11 +1,11 @@
 "use client";
 
+import { initialStatus } from "@/constantes";
+import { CoinsBadge } from "@/components/CoinsBadge";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { GridScan } from "@/components/GridScan";
-
-const initialStatus = { type: "", message: "" };
 
 export default function AjustesPage() {
   const router = useRouter();
@@ -157,6 +157,8 @@ export default function AjustesPage() {
         />
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,159,252,0.12),transparent_55%),radial-gradient(circle_at_20%_80%,rgba(111,214,255,0.16),transparent_50%),linear-gradient(180deg,rgba(5,6,12,0.65),rgba(5,6,12,0.25))]" />
       </div>
+
+      <CoinsBadge userId={user?.id} />
 
       <main className="relative z-10 flex w-full max-w-[540px] flex-col items-center text-center">
         <div className="flex w-full items-center justify-center text-[11px] uppercase tracking-[0.22em] text-white/60">

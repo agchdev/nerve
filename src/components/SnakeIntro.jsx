@@ -9,9 +9,19 @@ const formatRules = (rules) => {
     .filter(Boolean);
 };
 
-export function SnakeIntro({ game, isLoading, error, onContinue, onBack }) {
+export function SnakeIntro({
+  game,
+  isLoading,
+  error,
+  onContinue,
+  onBack,
+  actionLabel = "Continuar",
+}) {
   const rules = formatRules(game?.reglas);
   const title = game?.slug || "Snake";
+  const priceValue = game?.preciopartida;
+  const priceLabel =
+    typeof priceValue === "number" ? `${priceValue} monedas` : "-";
 
   return (
     <div className="mt-6 w-full max-w-[560px] text-center">
@@ -52,13 +62,7 @@ export function SnakeIntro({ game, isLoading, error, onContinue, onBack }) {
           ) : null}
         </div>
 
-        <div className="mt-4 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-2xl border border-white/10 bg-[rgba(6,8,16,0.6)] px-4 py-3">
-            <p className="text-[10px] uppercase tracking-[0.2em] text-white/60">
-              Nivel
-            </p>
-            <p className="mt-1 text-lg text-white/90">{game?.nivel ?? "-"}</p>
-          </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <div className="rounded-2xl border border-white/10 bg-[rgba(6,8,16,0.6)] px-4 py-3">
             <p className="text-[10px] uppercase tracking-[0.2em] text-white/60">
               Intentos
@@ -68,6 +72,12 @@ export function SnakeIntro({ game, isLoading, error, onContinue, onBack }) {
                 ? "Sin limite"
                 : game.max_intentos}
             </p>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-[rgba(6,8,16,0.6)] px-4 py-3">
+            <p className="text-[10px] uppercase tracking-[0.2em] text-white/60">
+              Precio
+            </p>
+            <p className="mt-1 text-lg text-white/90">{priceLabel}</p>
           </div>
           <div className="rounded-2xl border border-white/10 bg-[rgba(6,8,16,0.6)] px-4 py-3">
             <p className="text-[10px] uppercase tracking-[0.2em] text-white/60">
@@ -110,7 +120,7 @@ export function SnakeIntro({ game, isLoading, error, onContinue, onBack }) {
         disabled={isLoading || !game}
         className="mt-6 w-full rounded-full border border-white/20 bg-[rgba(6,8,16,0.65)] px-4 py-2.5 text-[12px] uppercase tracking-[0.16em] text-white/80 transition hover:border-[#6fd6ff] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {isLoading ? "Cargando..." : "Continuar"}
+        {isLoading ? "Cargando..." : actionLabel}
       </button>
     </div>
   );

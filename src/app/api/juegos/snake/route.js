@@ -21,7 +21,9 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from("juegos")
-    .select("id, slug, nivel, reglas, esta_activo, tipo, max_intentos")
+    .select(
+      "id, slug, reglas, esta_activo, tipo, max_intentos, preciopartida, image_url"
+    )
     .eq("slug", "Snake")
     .maybeSingle();
 

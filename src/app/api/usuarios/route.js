@@ -13,6 +13,17 @@ const supabase =
     : null;
 
 const MIN_PASSWORD_LENGTH = 8;
+const hasUppercase = (value) => /[A-Z]/.test(value);
+const hasLowercase = (value) => /[a-z]/.test(value);
+const hasNumber = (value) => /\d/.test(value);
+const hasSymbol = (value) => /[^A-Za-z0-9]/.test(value);
+
+const isStrongPassword = (value) =>
+  value.length >= MIN_PASSWORD_LENGTH &&
+  hasUppercase(value) &&
+  hasLowercase(value) &&
+  hasNumber(value) &&
+  hasSymbol(value);
 const normalizeDigits = (value) => String(value || "").replace(/\D/g, "");
 
 const hashPassword = (password) => {
@@ -46,7 +57,7 @@ export async function POST(request) {
     return NextResponse.json({ code: "MISSING_FIELDS" }, { status: 400 });
   }
 
-  if (rawPassword.length < MIN_PASSWORD_LENGTH) {
+  if (!isStrongPassword(rawPassword)) {
     return NextResponse.json({ code: "WEAK_PASSWORD" }, { status: 400 });
   }
 

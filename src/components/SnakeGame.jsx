@@ -30,7 +30,11 @@ const spawnFood = (snake) => {
   return { x, y };
 };
 
-export function SnakeGame({ onGameOver }) {
+export function SnakeGame({
+  onGameOver,
+  startSignal = 0,
+  controlsLocked = false,
+}) {
   const canvasRef = useRef(null);
   const boardSizeRef = useRef(0);
   const cellSizeRef = useRef(0);
@@ -133,7 +137,7 @@ export function SnakeGame({ onGameOver }) {
 
   const queueDirection = useCallback(
     (next) => {
-      if (!next) return;
+      if (controlsLocked || !next) return;
       const current = directionRef.current;
       if (current.x + next.x === 0 && current.y + next.y === 0) {
         return;
@@ -144,7 +148,7 @@ export function SnakeGame({ onGameOver }) {
         startGame(next);
       }
     },
-    [startGame]
+    [controlsLocked, startGame]
   );
 
   const stepGame = useCallback(() => {
@@ -194,6 +198,7 @@ export function SnakeGame({ onGameOver }) {
 
   const handleKeyDown = useCallback(
     (event) => {
+      if (controlsLocked) return;
       const key = event.key.toLowerCase();
       let next = null;
 
@@ -213,17 +218,22 @@ export function SnakeGame({ onGameOver }) {
       event.preventDefault();
       queueDirection(next);
     },
-    [queueDirection, startGame]
+    [controlsLocked, queueDirection, startGame]
   );
 
-  const handleTouchStart = useCallback((event) => {
-    const touch = event.touches[0];
-    if (!touch) return;
-    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
-  }, []);
+  const handleTouchStart = useCallback(
+    (event) => {
+      if (controlsLocked) return;
+      const touch = event.touches[0];
+      if (!touch) return;
+      touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+    },
+    [controlsLocked]
+  );
 
   const handleTouchEnd = useCallback(
     (event) => {
+      if (controlsLocked) return;
       const start = touchStartRef.current;
       const touch = event.changedTouches[0];
       if (!start || !touch) return;
@@ -241,7 +251,7 @@ export function SnakeGame({ onGameOver }) {
         queueDirection({ x: 0, y: dy > 0 ? 1 : -1 });
       }
     },
-    [queueDirection]
+    [controlsLocked, queueDirection]
   );
 
   useEffect(() => {
@@ -300,11 +310,17 @@ export function SnakeGame({ onGameOver }) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleKeyDown, resetBoard]);
 
+  useEffect(() => {
+    if (!startSignal) return;
+    startGame();
+  }, [startGame, startSignal]);
+
   const actionLabel =
     status === "running" ? "Jugando..." : status === "gameover" ? "Reintentar" : "Empezar";
+  const isActionDisabled = controlsLocked || status === "running";
 
   const controlButtonClass =
-    "flex h-12 w-12 items-center justify-center rounded-full border border-white/20 bg-[rgba(6,8,16,0.65)] text-lg font-semibold text-white/80 transition hover:border-[#6fd6ff] hover:text-white";
+    "flex h-20 w-full items-center justify-center rounded-2xl border border-white/20 bg-[rgba(6,8,16,0.65)] text-3xl font-semibold text-white/80 transition hover:border-[#6fd6ff] hover:text-white active:scale-[0.98] touch-manipulation";
 
   return (
     <div className="mt-4 flex w-full flex-col items-center">
@@ -333,13 +349,16 @@ export function SnakeGame({ onGameOver }) {
 
       <button
         type="button"
-        onClick={() => startGame()}
-        className="mt-4 rounded-full border border-white/20 bg-[rgba(6,8,16,0.65)] px-4 py-2 text-[11px] uppercase tracking-[0.18em] text-white/80 transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[#6fd6ff] hover:bg-[rgba(14,22,38,0.85)] hover:text-white hover:shadow-[0_12px_28px_rgba(111,214,255,0.4)]"
+        onClick={() => {
+          if (!isActionDisabled) startGame();
+        }}
+        disabled={isActionDisabled}
+        className="mt-4 rounded-full border border-white/20 bg-[rgba(6,8,16,0.65)] px-4 py-2 text-[11px] uppercase tracking-[0.18em] text-white/80 transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[#6fd6ff] hover:bg-[rgba(14,22,38,0.85)] hover:text-white hover:shadow-[0_12px_28px_rgba(111,214,255,0.4)] disabled:cursor-not-allowed disabled:opacity-60"
       >
         {actionLabel}
       </button>
 
-      <div className="mt-4 grid w-full max-w-[240px] grid-cols-3 gap-2 md:hidden">
+      <div className="mt-6 grid w-full grid-cols-3 gap-2 px-2 md:hidden">
         <button
           type="button"
           onClick={() => queueDirection({ x: 0, y: -1 })}
