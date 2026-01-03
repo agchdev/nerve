@@ -416,9 +416,15 @@ export default function JumpCubePage() {
     Number.isFinite(priceValue) && Math.trunc(priceValue) > 0
       ? `Jugar ${Math.trunc(priceValue)} monedas`
       : "Continuar";
+  const containerClassName = showGame
+    ? "relative flex h-screen w-screen items-stretch justify-center overflow-hidden bg-[#07040f] text-[#f5f0ff]"
+    : "relative flex min-h-screen items-start justify-center overflow-hidden bg-[#07040f] px-4 pb-12 pt-6 text-[#f5f0ff] sm:px-6";
+  const mainClassName = showGame
+    ? "relative z-10 flex h-full w-full flex-col items-stretch text-center"
+    : "relative z-10 flex w-full max-w-[760px] flex-col items-center text-center";
 
   return (
-    <div className="relative flex min-h-screen items-start justify-center overflow-hidden bg-[#07040f] px-4 pb-12 pt-6 text-[#f5f0ff] sm:px-6">
+    <div className={containerClassName}>
       {!showGame ? (
         <div className="absolute inset-0 z-0" aria-hidden="true">
           <GridScan
@@ -439,56 +445,76 @@ export default function JumpCubePage() {
 
       <CoinsBadge userId={user?.id} />
 
-      <main className="relative z-10 flex w-full max-w-[760px] flex-col items-center text-center">
-        <div className="flex w-full items-center justify-between text-[11px] uppercase tracking-[0.22em] text-white/60">
-          <span className="font-[var(--font-press-start)] text-[18px] uppercase tracking-[0.2em] text-[#f5f0ff] sm:text-[22px]">
-            ALEX GAMES
-          </span>
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="rounded-full border border-white/20 bg-[rgba(6,8,16,0.65)] px-3 py-1.5 text-[10px] uppercase tracking-[0.16em] text-white/80 transition hover:border-[#6fd6ff] hover:text-white"
-          >
-            Cerrar sesion
-          </button>
-        </div>
-        <p className="mt-3 text-[11px] uppercase tracking-[0.25em] text-white/60">
-          JumpCube
-        </p>
-
+      <main className={mainClassName}>
         {showGame ? (
-          <div className="mt-4 w-full text-center">
-            <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.22em] text-white/60">
-              <span>JumpCube</span>
+          <div className="absolute left-4 right-4 top-4 z-20 flex items-center justify-between text-[11px] uppercase tracking-[0.22em] text-white/70">
+            <span className="font-[var(--font-press-start)] text-[14px] uppercase tracking-[0.2em] text-[#f5f0ff] sm:text-[18px]">
+              ALEX GAMES
+            </span>
+            <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={handleBack}
-                className="transition hover:text-white"
+                className="rounded-full border border-white/20 bg-[rgba(6,8,16,0.45)] px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-white/80 transition hover:border-white/40 hover:text-white"
               >
                 Volver
               </button>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="rounded-full border border-white/20 bg-[rgba(6,8,16,0.65)] px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-white/80 transition hover:border-[#6fd6ff] hover:text-white"
+              >
+                Cerrar sesion
+              </button>
             </div>
+          </div>
+        ) : (
+          <>
+            <div className="flex w-full items-center justify-between text-[11px] uppercase tracking-[0.22em] text-white/60">
+              <span className="font-[var(--font-press-start)] text-[18px] uppercase tracking-[0.2em] text-[#f5f0ff] sm:text-[22px]">
+                ALEX GAMES
+              </span>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="rounded-full border border-white/20 bg-[rgba(6,8,16,0.65)] px-3 py-1.5 text-[10px] uppercase tracking-[0.16em] text-white/80 transition hover:border-[#6fd6ff] hover:text-white"
+              >
+                Cerrar sesion
+              </button>
+            </div>
+            <p className="mt-3 text-[11px] uppercase tracking-[0.25em] text-white/60">
+              JumpCube
+            </p>
+          </>
+        )}
 
+        {showGame ? (
+          <div className="relative flex h-full w-full flex-1 flex-col">
             <JumpCubeGame
               onGameOver={handleGameOver}
               startSignal={startSignal}
               controlsLocked={showReplayModal}
+              fullScreen
             />
 
             {saveStatus.message ? (
-              <p
-                className={`mt-4 text-sm ${
-                  saveStatus.type === "success"
-                    ? "text-[#7ef3b2]"
-                    : "text-[#ff8f90]"
-                }`}
-              >
-                {saveStatus.message}
-              </p>
+              <div className="pointer-events-none absolute bottom-6 left-0 right-0 flex justify-center px-4">
+                <p
+                  className={`rounded-full border border-white/15 bg-[rgba(6,8,16,0.65)] px-4 py-2 text-xs ${
+                    saveStatus.type === "success"
+                      ? "text-[#7ef3b2]"
+                      : "text-[#ff8f90]"
+                  }`}
+                >
+                  {saveStatus.message}
+                </p>
+              </div>
             ) : isSaving ? (
-              <p className="mt-4 text-sm text-white/60">
-                Guardando puntuacion...
-              </p>
+              <div className="pointer-events-none absolute bottom-6 left-0 right-0 flex justify-center px-4">
+                <p className="rounded-full border border-white/15 bg-[rgba(6,8,16,0.65)] px-4 py-2 text-xs text-white/70">
+                  Guardando puntuacion...
+                </p>
+              </div>
             ) : null}
 
             {showReplayModal ? (

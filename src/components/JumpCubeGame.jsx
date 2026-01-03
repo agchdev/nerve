@@ -16,6 +16,7 @@ export function JumpCubeGame({
   onGameOver,
   startSignal = 0,
   controlsLocked = false,
+  fullScreen = false,
 }) {
   const canvasRef = useRef(null);
   const boardRef = useRef({ width: 0, height: 0 });
@@ -275,36 +276,69 @@ export function JumpCubeGame({
     setStatus("idle");
   }, [resetBoard, startSignal]);
 
-  return (
-    <div className="mt-4 flex w-full flex-col items-center">
-      <div className="flex w-full max-w-[560px] items-center justify-between text-[11px] uppercase tracking-[0.22em] text-white/60 lg:max-w-[720px]">
-        <span>Puntuacion: {score}</span>
-        <span>Record: {bestScore}</span>
-      </div>
+  const wrapperClassName = fullScreen
+    ? "flex h-full w-full flex-col"
+    : "mt-4 flex w-full flex-col items-center";
+  const scoreRowClassName = fullScreen
+    ? "pointer-events-none absolute left-4 top-16 flex flex-col gap-1 rounded-xl border border-white/15 bg-[rgba(6,8,16,0.65)] px-3 py-2 text-[10px] uppercase tracking-[0.18em] text-white/70 sm:top-20"
+    : "flex w-full max-w-[560px] items-center justify-between text-[11px] uppercase tracking-[0.22em] text-white/60 lg:max-w-[720px]";
+  const boardWrapperClassName = fullScreen
+    ? "relative flex w-full flex-1 min-h-0"
+    : "mt-3 w-full max-w-[560px] lg:max-w-[720px]";
+  const canvasWrapperClassName = fullScreen
+    ? "relative h-full w-full touch-none"
+    : "relative touch-none";
+  const canvasClassName = fullScreen
+    ? "h-full w-full border border-white/15 box-border"
+    : "h-[320px] w-full rounded-2xl border border-white/15 sm:h-[380px] lg:h-[520px]";
+  const overlayClassName = fullScreen
+    ? "pointer-events-none absolute inset-0 flex items-center justify-center bg-[rgba(4,6,12,0.55)] text-sm uppercase tracking-[0.2em] text-white/80"
+    : "pointer-events-none absolute inset-0 flex items-center justify-center rounded-2xl bg-[rgba(4,6,12,0.55)] text-sm uppercase tracking-[0.2em] text-white/80";
 
-      <div className="mt-3 w-full max-w-[560px] lg:max-w-[720px]">
+  return (
+    <div className={wrapperClassName}>
+      {!fullScreen ? (
+        <div className={scoreRowClassName}>
+          <span>Puntuacion: {score}</span>
+          <span>Record: {bestScore}</span>
+        </div>
+      ) : null}
+
+      <div className={boardWrapperClassName}>
         <div
-          className="relative touch-none"
+          className={canvasWrapperClassName}
           onPointerDown={jump}
           role="button"
           tabIndex={0}
           aria-label="Saltar"
         >
-          <canvas
-            className="h-[320px] w-full rounded-2xl border border-white/15 sm:h-[380px] lg:h-[520px]"
-            ref={canvasRef}
-          />
+          {fullScreen ? (
+            <div className={scoreRowClassName}>
+              <span>Puntuacion: {score}</span>
+              <span>Record: {bestScore}</span>
+            </div>
+          ) : null}
+
+          <canvas className={canvasClassName} ref={canvasRef} />
           {status !== "running" ? (
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-2xl bg-[rgba(4,6,12,0.55)] text-sm uppercase tracking-[0.2em] text-white/80">
+            <div className={overlayClassName}>
               {status === "gameover" ? "Game Over" : "Listo"}
             </div>
+          ) : null}
+
+          {fullScreen ? (
+            <p className="pointer-events-none absolute bottom-4 left-0 right-0 text-center text-[10px] uppercase tracking-[0.2em] text-white/60">
+              Toca o usa espacio para saltar.
+            </p>
           ) : null}
         </div>
       </div>
 
-      <p className="mt-3 text-xs text-white/60">
-        Toca o usa espacio para saltar.
-      </p>
+      {!fullScreen ? (
+        <p className="mt-3 text-xs text-white/60">
+          Toca o usa espacio para saltar.
+        </p>
+      ) : null}
     </div>
   );
 }
