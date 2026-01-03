@@ -226,7 +226,7 @@ export default function SnakePage() {
         </div>
         <main className="relative z-10 flex w-full max-w-[420px] flex-col items-center text-center">
           <h1 className="font-[var(--font-press-start)] text-[28px] uppercase tracking-[0.18em] text-[#f5f0ff] sm:text-[36px]">
-            AGCH GAMES
+            ALEX GAMES
           </h1>
           <p className="mt-4 text-sm text-white/70">
             Verificando telefono...
@@ -281,7 +281,7 @@ export default function SnakePage() {
         </div>
         <main className="relative z-10 flex w-full max-w-[420px] flex-col items-center text-center">
           <h1 className="font-[var(--font-press-start)] text-[28px] uppercase tracking-[0.18em] text-[#f5f0ff] sm:text-[36px]">
-            AGCH GAMES
+            ALEX GAMES
           </h1>
           <p className="mt-4 text-sm text-white/70">
             Inicia sesion para acceder al minijuego.
@@ -299,32 +299,34 @@ export default function SnakePage() {
 
   return (
     <div className="relative flex min-h-screen items-start justify-center overflow-hidden bg-[#07040f] px-4 pb-12 pt-6 text-[#f5f0ff] sm:px-6">
-      <div className="absolute inset-0 z-0" aria-hidden="true">
-        <GridScan
-          sensitivity={0.005}
-          lineThickness={1}
-          linesColor="#392e4e"
-          gridScale={0.1}
-          scanColor="#FF9FFC"
-          scanOpacity={0.4}
-          enablePost
-          bloomIntensity={0.6}
-          chromaticAberration={0.002}
-          noiseIntensity={0.01}
-          className="h-full w-full"
-        />
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,159,252,0.12),transparent_55%),radial-gradient(circle_at_20%_80%,rgba(111,214,255,0.16),transparent_50%),linear-gradient(180deg,rgba(5,6,12,0.65),rgba(5,6,12,0.25))]" />
-      </div>
+      {!showGame ? (
+        <div className="absolute inset-0 z-0" aria-hidden="true">
+          <GridScan
+            sensitivity={0.005}
+            lineThickness={1}
+            linesColor="#392e4e"
+            gridScale={0.1}
+            scanColor="#FF9FFC"
+            scanOpacity={0.4}
+            enablePost
+            bloomIntensity={0.6}
+            chromaticAberration={0.002}
+            noiseIntensity={0.01}
+            className="h-full w-full"
+          />
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,159,252,0.12),transparent_55%),radial-gradient(circle_at_20%_80%,rgba(111,214,255,0.16),transparent_50%),linear-gradient(180deg,rgba(5,6,12,0.65),rgba(5,6,12,0.25))]" />
+        </div>
+      ) : null}
 
       <main className="relative z-10 flex w-full max-w-[640px] flex-col items-center text-center">
         <div className="flex w-full items-center justify-between text-[11px] uppercase tracking-[0.22em] text-white/60">
           <span className="font-[var(--font-press-start)] text-[18px] uppercase tracking-[0.2em] text-[#f5f0ff] sm:text-[22px]">
-            AGCH GAMES
+            ALEX GAMES
           </span>
           <button
             type="button"
             onClick={handleLogout}
-            className="transition hover:text-white"
+            className="rounded-full border border-white/20 bg-[rgba(6,8,16,0.65)] px-3 py-1.5 text-[10px] uppercase tracking-[0.16em] text-white/80 transition hover:border-[#6fd6ff] hover:text-white"
           >
             Cerrar sesion
           </button>

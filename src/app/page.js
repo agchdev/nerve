@@ -326,21 +326,6 @@ export default function Home() {
     }
   };
 
-  const handleLogout = () => {
-    if (typeof window !== "undefined") {
-      window.localStorage.removeItem("agch_user");
-    }
-    setCurrentUser(null);
-    setMode("login");
-    setShowRanking(false);
-    setRanking([]);
-    setRankingStatus(initialStatus);
-    setStatus(initialStatus);
-    setNombre("");
-    setTelefonoLocal("");
-    setPassword("");
-  };
-
   useEffect(() => {
     if (typeof window === "undefined") return;
     const stored = window.localStorage.getItem("agch_user");
@@ -500,6 +485,7 @@ export default function Home() {
     }
   };
 
+
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#07040f] px-6 py-12 text-[#f5f0ff]">
       <div className="absolute inset-0 z-0" aria-hidden="true">
@@ -522,26 +508,25 @@ export default function Home() {
         {isLogin && currentUser ? (
           <>
             <h1 className="font-[var(--font-press-start)] text-[40px] uppercase tracking-[0.2em] text-[#f5f0ff] drop-shadow-[0_0_26px_rgba(255,159,252,0.55)] sm:text-[52px]">
-              AGCH GAMES
+              ALEX GAMES
             </h1>
             {showRanking ? (
               <div className="mt-8 w-full max-w-[420px] text-center">
                 <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.22em] text-white/60">
                   <span>Clasificación</span>
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-3">
+                    <Link
+                      href="/ajustes"
+                      className="rounded-full border border-white/20 bg-[rgba(6,8,16,0.65)] px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-white/80 transition duration-200 ease-out hover:border-[#6fd6ff] hover:text-white"
+                    >
+                      Ajustes
+                    </Link>
                     <button
                       type="button"
                       onClick={() => setShowRanking(false)}
                       className="transition duration-200 ease-out hover:text-white hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.65)]"
                     >
                       Volver
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleLogout}
-                      className="transition duration-200 ease-out hover:text-white hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.65)]"
-                    >
-                      Cerrar sesion
                     </button>
                   </div>
                 </div>
@@ -589,13 +574,6 @@ export default function Home() {
               <div className="mt-8 w-full max-w-[360px] space-y-3">
                 <button
                   type="button"
-                  onClick={handleLogout}
-                  className="text-[11px] uppercase tracking-[0.2em] text-white/60 transition duration-200 ease-out hover:text-white"
-                >
-                  Cerrar sesion
-                </button>
-                <button
-                  type="button"
                   onClick={handleShowRanking}
                   className="inline-flex w-full items-center justify-center rounded-full border border-white/20 bg-[rgba(6,8,16,0.65)] px-4 py-2.5 text-[12px] uppercase tracking-[0.16em] text-white/80 transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[#6fd6ff] hover:bg-[rgba(14,22,38,0.85)] hover:text-white hover:shadow-[0_12px_28px_rgba(111,214,255,0.4)]"
                 >
@@ -607,6 +585,12 @@ export default function Home() {
                 >
                   Jugar minijuego
                 </Link>
+                <Link
+                  href="/ajustes"
+                  className="inline-flex w-full items-center justify-center rounded-full border border-white/20 bg-[rgba(6,8,16,0.65)] px-4 py-2.5 text-[12px] uppercase tracking-[0.16em] text-white/80 transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[#6fd6ff] hover:bg-[rgba(14,22,38,0.85)] hover:text-white hover:shadow-[0_12px_28px_rgba(111,214,255,0.35)]"
+                >
+                  Ajustes de cuenta
+                </Link>
               </div>
             )}
           </>
@@ -616,7 +600,7 @@ export default function Home() {
               {isLogin ? "Bienvenido de vuelta" : "Registro de jugadores"}
             </p>
             <h1 className="mt-3 font-[var(--font-press-start)] text-[40px] uppercase tracking-[0.2em] text-[#f5f0ff] drop-shadow-[0_0_26px_rgba(255,159,252,0.55)] sm:text-[52px]">
-              AGCH GAMES
+              ALEX GAMES
             </h1>
             <p className="mt-2 max-w-[420px] text-sm leading-6 text-white/70">
               {isLogin

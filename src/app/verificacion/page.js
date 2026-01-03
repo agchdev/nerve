@@ -69,14 +69,6 @@ function VerificacionContent() {
     };
   }, [isAuthReady, router, safeNext, user]);
 
-  const handleLogout = useCallback(() => {
-    if (typeof window !== "undefined") {
-      window.localStorage.removeItem("agch_user");
-    }
-    setUser(null);
-    router.push("/");
-  }, [router]);
-
   const handleSendCode = useCallback(async () => {
     if (!user?.id) return;
 
@@ -195,7 +187,7 @@ function VerificacionContent() {
         </div>
         <main className="relative z-10 flex w-full max-w-[420px] flex-col items-center text-center">
           <h1 className="font-[var(--font-press-start)] text-[28px] uppercase tracking-[0.18em] text-[#f5f0ff] sm:text-[36px]">
-            AGCH GAMES
+            ALEX GAMES
           </h1>
           <p className="mt-4 text-sm text-white/70">
             Inicia sesion para verificar tu telefono.
@@ -231,17 +223,10 @@ function VerificacionContent() {
       </div>
 
       <main className="relative z-10 flex w-full max-w-[540px] flex-col items-center text-center">
-        <div className="flex w-full items-center justify-between text-[11px] uppercase tracking-[0.22em] text-white/60">
+        <div className="flex w-full items-center justify-center text-[11px] uppercase tracking-[0.22em] text-white/60">
           <span className="font-[var(--font-press-start)] text-[18px] uppercase tracking-[0.2em] text-[#f5f0ff] sm:text-[22px]">
-            AGCH GAMES
+            ALEX GAMES
           </span>
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="transition hover:text-white"
-          >
-            Cerrar sesion
-          </button>
         </div>
         <p className="mt-3 text-[11px] uppercase tracking-[0.25em] text-white/60">
           Verificacion
@@ -297,6 +282,13 @@ function VerificacionContent() {
             {status.message}
           </p>
         ) : null}
+
+        <Link
+          href="/ajustes"
+          className="mt-6 inline-flex w-full max-w-[360px] items-center justify-center rounded-full border border-white/20 bg-[rgba(6,8,16,0.65)] px-4 py-2.5 text-[12px] uppercase tracking-[0.16em] text-white/80 transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[#6fd6ff] hover:text-white"
+        >
+          Ir a ajustes de cuenta
+        </Link>
 
         <div className="mt-6 flex items-center gap-4 text-[11px] uppercase tracking-[0.22em] text-white/60">
           <Link href="/" className="transition hover:text-white">
