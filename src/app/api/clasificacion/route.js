@@ -21,7 +21,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from("puntuaciones")
-    .select("puntuacion_max, id_usuario, usuarios ( id, nombre )")
+    .select("puntuacion_max, tiempopartida_max, id_usuario, usuarios ( id, nombre )")
     .order("puntuacion_max", { ascending: false });
 
   if (error) {
@@ -37,17 +37,30 @@ export async function GET() {
     if (!user?.id) continue;
 
     const existing = bestByUser.get(user.id);
-    if (!existing || row.puntuacion_max > existing.puntuacion) {
+    const tiempoRow =
+      typeof row.tiempopartida_max === "number" ? row.tiempopartida_max : 0;
+    if (
+      !existing ||
+      row.puntuacion_max > existing.puntuacion ||
+      (row.puntuacion_max === existing.puntuacion &&
+        tiempoRow > existing.tiempo)
+    ) {
       bestByUser.set(user.id, {
         id: user.id,
         nombre: user.nombre,
         puntuacion: row.puntuacion_max,
+        tiempo: tiempoRow,
       });
     }
   }
 
   const items = Array.from(bestByUser.values()).sort(
-    (a, b) => b.puntuacion - a.puntuacion
+    (a, b) => {
+      if (b.puntuacion !== a.puntuacion) {
+        return b.puntuacion - a.puntuacion;
+      }
+      return b.tiempo - a.tiempo;
+    }
   );
 
   return NextResponse.json({ items }, { status: 200 });

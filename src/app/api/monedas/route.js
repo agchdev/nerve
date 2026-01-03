@@ -68,7 +68,7 @@ export async function POST(request) {
 
   const { error: insertError } = await supabase
     .from("monedas")
-    .insert({ id_usuario: userId, cantidad: 0 })
+    .insert({ id_usuario: userId })
     .select("id")
     .single();
 

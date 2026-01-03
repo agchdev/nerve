@@ -46,6 +46,7 @@ export function SnakeGame({
   const touchStartRef = useRef(null);
   const lastSentScoreRef = useRef(null);
   const scoreRef = useRef(0);
+  const startTimeRef = useRef(null);
 
   const [status, setStatus] = useState("idle");
   const [score, setScore] = useState(0);
@@ -115,6 +116,7 @@ export function SnakeGame({
     (initialDirection) => {
       resetBoard();
       lastSentScoreRef.current = null;
+      startTimeRef.current = Date.now();
       if (initialDirection) {
         directionRef.current = initialDirection;
         nextDirectionRef.current = initialDirection;
@@ -128,9 +130,13 @@ export function SnakeGame({
     setStatus("gameover");
     if (typeof onGameOver === "function") {
       const finalScore = scoreRef.current;
+      const startedAt = startTimeRef.current;
+      const elapsedMs =
+        typeof startedAt === "number" ? Date.now() - startedAt : 0;
+      const elapsedSeconds = Math.max(0, Math.floor(elapsedMs / 1000));
       if (lastSentScoreRef.current !== finalScore) {
         lastSentScoreRef.current = finalScore;
-        onGameOver(finalScore);
+        onGameOver(finalScore, elapsedSeconds);
       }
     }
   }, [onGameOver]);

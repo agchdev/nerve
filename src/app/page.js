@@ -13,6 +13,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+const formatTiempo = (value) => {
+  const total = Number.isFinite(value) && value >= 0 ? Math.floor(value) : 0;
+  const minutes = Math.floor(total / 60);
+  const seconds = total % 60;
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+};
+
 export default function Home() {
   const router = useRouter();
   const [mode, setMode] = useState("register");
@@ -345,9 +352,14 @@ export default function Home() {
                             {item.nombre || "Jugador"}
                           </span>
                         </div>
-                        <span className="text-[#ff9ffc]">
-                          {item.puntuacion}
-                        </span>
+                        <div className="flex items-center gap-2 whitespace-nowrap">
+                          <span className="text-[#ff9ffc]">
+                            {item.puntuacion}
+                          </span>
+                          <span className="text-[10px] uppercase tracking-[0.18em] text-white/50">
+                            {formatTiempo(item.tiempo)}
+                          </span>
+                        </div>
                       </li>
                     ))}
                   </ol>

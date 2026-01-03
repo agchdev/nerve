@@ -219,7 +219,6 @@ function VerificacionContent() {
           noiseIntensity={0.01}
           className="h-full w-full"
         />
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,159,252,0.12),transparent_55%),radial-gradient(circle_at_20%_80%,rgba(111,214,255,0.16),transparent_50%),linear-gradient(180deg,rgba(5,6,12,0.65),rgba(5,6,12,0.25))]" />
       </div>
 
       <main className="relative z-10 flex w-full max-w-[540px] flex-col items-center text-center">

@@ -230,7 +230,7 @@ export default function SnakePage() {
   }, [router]);
 
   const handleGameOver = useCallback(
-    async (score) => {
+    async (score, durationSeconds = 0) => {
       setShowReplayModal(true);
       setReplayStatus(initialStatus);
       if (!user?.id || !game?.id) return;
@@ -238,6 +238,10 @@ export default function SnakePage() {
       setSaveStatus(initialStatus);
 
       try {
+        const tiempo =
+          Number.isFinite(durationSeconds) && durationSeconds >= 0
+            ? Math.floor(durationSeconds)
+            : 0;
         const response = await fetch("/api/puntuaciones", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -245,6 +249,7 @@ export default function SnakePage() {
             userId: user.id,
             gameId: game.id,
             puntos: score,
+            tiempo,
           }),
         });
 
@@ -258,10 +263,18 @@ export default function SnakePage() {
           return;
         }
 
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new Event("coins:refresh"));
+        }
+
         const best = data?.puntuacion_max ?? score;
+        const reward = Number(data?.monedas_ganadas ?? 0);
         setSaveStatus({
           type: "success",
-          message: `Puntuacion guardada. Mejor: ${best}`,
+          message:
+            reward > 0
+              ? `Puntuacion guardada. Mejor: ${best}. +${reward} monedas`
+              : `Puntuacion guardada. Mejor: ${best}`,
         });
       } catch (error) {
         setSaveStatus({
@@ -420,7 +433,6 @@ export default function SnakePage() {
             noiseIntensity={0.01}
             className="h-full w-full"
           />
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,159,252,0.12),transparent_55%),radial-gradient(circle_at_20%_80%,rgba(111,214,255,0.16),transparent_50%),linear-gradient(180deg,rgba(5,6,12,0.65),rgba(5,6,12,0.25))]" />
         </div>
       ) : null}
 
