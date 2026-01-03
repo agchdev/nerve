@@ -2,11 +2,13 @@
 
 import { GridScan } from "@/components/GridScan";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 const initialStatus = { type: "", message: "" };
 
 export default function Home() {
+  const router = useRouter();
   const [mode, setMode] = useState("register");
   const [nombre, setNombre] = useState("");
   const [prefijo, setPrefijo] = useState("34");
@@ -113,6 +115,37 @@ export default function Home() {
       window.localStorage.removeItem("agch_user");
     }
   }, []);
+
+  useEffect(() => {
+    if (!currentUser?.id) return;
+    let isMounted = true;
+
+    const checkVerification = async () => {
+      try {
+        const response = await fetch(
+          `/api/telefono/estado?userId=${encodeURIComponent(currentUser.id)}`
+        );
+        const data = await response.json().catch(() => ({}));
+        if (!isMounted) return;
+        if (!response.ok || !data?.verified) {
+          router.replace(
+            `/verificacion?next=${encodeURIComponent("/")}`
+          );
+        }
+      } catch (error) {
+        if (isMounted) {
+          router.replace(
+            `/verificacion?next=${encodeURIComponent("/")}`
+          );
+        }
+      }
+    };
+
+    checkVerification();
+    return () => {
+      isMounted = false;
+    };
+  }, [currentUser, router]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
