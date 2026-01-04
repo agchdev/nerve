@@ -110,10 +110,11 @@ export function JumpCubeGame({
     if (!width || !height) return;
 
     const gapHalf = PIPE_GAP / 2;
-    const margin = 32;
-    const minY = margin + gapHalf;
-    const maxY = height - margin - gapHalf;
-    const gapY = minY + Math.random() * Math.max(0, maxY - minY);
+    const topMargin = Math.max(48, height * 0.18);
+    const bottomMargin = Math.max(32, height * 0.1);
+    const minY = topMargin + gapHalf;
+    const maxY = Math.max(minY, height - bottomMargin - gapHalf);
+    const gapY = minY + Math.random() * (maxY - minY);
 
     obstaclesRef.current.push({
       x: width + PIPE_WIDTH,
@@ -283,7 +284,7 @@ export function JumpCubeGame({
     ? "pointer-events-none absolute left-4 top-16 flex flex-col gap-1 rounded-xl border border-white/15 bg-[rgba(6,8,16,0.65)] px-3 py-2 text-[10px] uppercase tracking-[0.18em] text-white/70 sm:top-20"
     : "flex w-full max-w-[560px] items-center justify-between text-[11px] uppercase tracking-[0.22em] text-white/60 lg:max-w-[720px]";
   const boardWrapperClassName = fullScreen
-    ? "relative flex w-full flex-1 min-h-0"
+    ? "relative flex w-full flex-1 min-h-0 p-4"
     : "mt-3 w-full max-w-[560px] lg:max-w-[720px]";
   const canvasWrapperClassName = fullScreen
     ? "relative h-full w-full touch-none"
