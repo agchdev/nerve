@@ -8,6 +8,15 @@ const SPAWN_INTERVAL = 1200;
 const MIN_LIFETIME = 1100;
 const MAX_LIFETIME = 1700;
 const MAX_CUBES = 4;
+const MOBILE_WIDTH = 520;
+const MOBILE_MAX_CUBES = 6;
+const MOBILE_SPAWN_INTERVAL = 900;
+const SIZE_SCALE_DESKTOP = 0.08;
+const SIZE_SCALE_MOBILE = 0.11;
+const SIZE_MIN_DESKTOP = 24;
+const SIZE_MAX_DESKTOP = 52;
+const SIZE_MIN_MOBILE = 28;
+const SIZE_MAX_MOBILE = 72;
 const GRAVITY_MIN = 950;
 const GRAVITY_MAX = 1800;
 const GRAVITY_SCALE = 1.2;
@@ -24,6 +33,11 @@ const POPUP_COLORS = {
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 const rgba = (rgb, alpha) =>
   `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${alpha})`;
+const isMobileWidth = (width) => width <= MOBILE_WIDTH;
+const maxCubesForWidth = (width) =>
+  isMobileWidth(width) ? MOBILE_MAX_CUBES : MAX_CUBES;
+const spawnIntervalForWidth = (width) =>
+  isMobileWidth(width) ? MOBILE_SPAWN_INTERVAL : SPAWN_INTERVAL;
 
 const randomBetween = (min, max) => min + Math.random() * (max - min);
 const gravityForHeight = (height) =>
@@ -165,11 +179,15 @@ export function ShotCubeGame({
 
     const now = performance.now();
     const gravity = gravityForHeight(height);
-    const baseSize = clamp(Math.min(width, height) * 0.08, 24, 52);
+    const isMobile = isMobileWidth(width);
+    const sizeScale = isMobile ? SIZE_SCALE_MOBILE : SIZE_SCALE_DESKTOP;
+    const sizeMin = isMobile ? SIZE_MIN_MOBILE : SIZE_MIN_DESKTOP;
+    const sizeMax = isMobile ? SIZE_MAX_MOBILE : SIZE_MAX_DESKTOP;
+    const baseSize = clamp(Math.min(width, height) * sizeScale, sizeMin, sizeMax);
     const size = clamp(
       baseSize + randomBetween(-baseSize * 0.35, baseSize * 0.35),
-      20,
-      64
+      sizeMin - 4,
+      sizeMax + 12
     );
     const padding = Math.max(12, size * 0.3);
     const maxX = Math.max(0, width - padding * 2 - size);
@@ -201,7 +219,7 @@ export function ShotCubeGame({
     if (!width || !height) return;
 
     cubesRef.current = [];
-    spawnTimerRef.current = SPAWN_INTERVAL;
+    spawnTimerRef.current = spawnIntervalForWidth(width);
     scoreRef.current = 0;
     missesRef.current = 0;
     pointerRef.current.active = false;
@@ -259,10 +277,12 @@ export function ShotCubeGame({
       if (!width || !height) return;
 
       const gravity = gravityForHeight(height);
+      const spawnInterval = spawnIntervalForWidth(width);
+      const maxCubes = maxCubesForWidth(width);
       spawnTimerRef.current += deltaSeconds * 1000;
-      if (spawnTimerRef.current >= SPAWN_INTERVAL) {
-        spawnTimerRef.current -= SPAWN_INTERVAL;
-        if (cubesRef.current.length < MAX_CUBES) {
+      if (spawnTimerRef.current >= spawnInterval) {
+        spawnTimerRef.current -= spawnInterval;
+        if (cubesRef.current.length < maxCubes) {
           spawnCube();
         }
       }
