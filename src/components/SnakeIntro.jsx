@@ -37,7 +37,7 @@ export function SnakeIntro({
             <button
               type="button"
               onClick={onBack}
-              className="transition hover:text-white"
+              className="rounded-full border border-white/20 bg-[rgba(8,12,22,0.8)] px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-white/90 shadow-[0_8px_18px_rgba(111,214,255,0.3)] transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[#ff9ffc] hover:text-white hover:shadow-[0_14px_26px_rgba(255,159,252,0.45)]"
             >
               Volver
             </button>
@@ -118,7 +118,7 @@ export function SnakeIntro({
         type="button"
         onClick={onContinue}
         disabled={isLoading || !game}
-        className="mt-6 w-full rounded-full border border-white/20 bg-[rgba(6,8,16,0.65)] px-4 py-2.5 text-[12px] uppercase tracking-[0.16em] text-white/80 transition hover:border-[#6fd6ff] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+        className="mt-6 w-full rounded-full bg-gradient-to-r from-[#ff9ffc] via-[#9fe3ff] to-[#7ef3b2] px-4 py-3 text-[12px] font-semibold uppercase tracking-[0.18em] text-[#05020c] shadow-[0_16px_30px_rgba(255,159,252,0.45)] transition duration-200 ease-out hover:-translate-y-0.5 hover:shadow-[0_22px_40px_rgba(111,214,255,0.55)] hover:from-[#ffd1ff] hover:via-[#bfeeff] hover:to-[#b7f7d9] disabled:cursor-not-allowed disabled:opacity-60"
       >
         {isLoading ? "Cargando..." : actionLabel}
       </button>

@@ -130,7 +130,7 @@ export default function AjustesPage() {
           </p>
           <Link
             href="/"
-            className="mt-6 rounded-full border border-white/20 bg-[rgba(6,8,16,0.65)] px-4 py-2.5 text-[12px] uppercase tracking-[0.16em] text-white/80 transition hover:border-[#6fd6ff] hover:text-white"
+            className="mt-6 rounded-full border border-white/25 bg-[rgba(8,12,22,0.85)] px-4 py-2.5 text-[12px] uppercase tracking-[0.18em] text-white/90 shadow-[0_10px_22px_rgba(111,214,255,0.3)] transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[#ff9ffc] hover:text-white hover:shadow-[0_16px_28px_rgba(255,159,252,0.45)]"
           >
             Volver al inicio
           </Link>
@@ -174,7 +174,7 @@ export default function AjustesPage() {
             <button
               type="button"
               onClick={handleLogout}
-              className="w-full rounded-full border border-white/20 bg-[rgba(6,8,16,0.65)] px-4 py-2.5 text-[12px] uppercase tracking-[0.16em] text-white/80 transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[#6fd6ff] hover:text-white"
+              className="w-full rounded-full border border-[#6fd6ff]/60 bg-[rgba(8,12,22,0.85)] px-4 py-2.5 text-[12px] uppercase tracking-[0.18em] text-white/90 transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[#6fd6ff] hover:text-white"
             >
               Cerrar sesion
             </button>
@@ -182,7 +182,7 @@ export default function AjustesPage() {
               type="button"
               onClick={handleDeleteAccount}
               disabled={isDeleting}
-              className="w-full rounded-full border border-[#ff8f90]/60 bg-[rgba(16,8,12,0.7)] px-4 py-2.5 text-[12px] uppercase tracking-[0.16em] text-[#ff8f90] transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[#ff8f90] hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-full border border-[#ff8f90]/70 bg-[rgba(24,10,14,0.85)] px-4 py-2.5 text-[12px] uppercase tracking-[0.18em] text-[#ff8f90] transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[#ff8f90] hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isDeleting ? "Eliminando..." : "Eliminar cuenta"}
             </button>
@@ -196,7 +196,7 @@ export default function AjustesPage() {
 
         <Link
           href="/"
-          className="mt-6 text-[11px] uppercase tracking-[0.22em] text-white/60 transition hover:text-white"
+          className="mt-6 rounded-full border border-[#ff9ffc]/60 bg-[rgba(8,12,22,0.8)] px-4 py-2 text-[11px] uppercase tracking-[0.2em] text-white/90 transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[#ff9ffc] hover:text-white"
         >
           Volver al inicio
         </Link>

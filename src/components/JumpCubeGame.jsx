@@ -3,14 +3,22 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 const STORAGE_KEY = "agch_jumpcube_best";
-const PIPE_INTERVAL = 1500;
+const BASE_PIPE_INTERVAL = 1750;
+const BURST_PIPE_INTERVAL = 950;
+const PIPE_INTERVAL_JITTER = 220;
+const BURST_INTERVAL_JITTER = 140;
+const BURST_CHANCE = 0.18;
+const BURST_MIN_COUNT = 2;
+const BURST_MAX_COUNT = 3;
 const PIPE_SPEED = 220;
 const PIPE_WIDTH = 56;
 const PIPE_GAP = 140;
 const GRAVITY = 1600;
-const JUMP_VELOCITY = -420;
+const JUMP_VELOCITY = -470;
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+const randomBetween = (min, max) => min + Math.random() * (max - min);
+const randomInt = (min, max) => Math.floor(randomBetween(min, max + 1));
 
 export function JumpCubeGame({
   onGameOver,
@@ -24,6 +32,8 @@ export function JumpCubeGame({
   const velocityRef = useRef(0);
   const obstaclesRef = useRef([]);
   const spawnTimerRef = useRef(0);
+  const nextSpawnIntervalRef = useRef(BASE_PIPE_INTERVAL);
+  const burstRemainingRef = useRef(0);
   const statusRef = useRef("idle");
   const lastSentScoreRef = useRef(null);
   const scoreRef = useRef(0);
@@ -71,7 +81,9 @@ export function JumpCubeGame({
     };
     velocityRef.current = 0;
     obstaclesRef.current = [];
-    spawnTimerRef.current = PIPE_INTERVAL;
+    burstRemainingRef.current = 0;
+    nextSpawnIntervalRef.current = BASE_PIPE_INTERVAL;
+    spawnTimerRef.current = nextSpawnIntervalRef.current;
     scoreRef.current = 0;
     setScore(0);
     draw();
@@ -123,6 +135,35 @@ export function JumpCubeGame({
     });
   }, []);
 
+  const scheduleNextSpawn = useCallback(() => {
+    const baseInterval = (value, jitter) =>
+      Math.max(650, value + randomBetween(-jitter, jitter));
+
+    if (burstRemainingRef.current > 0) {
+      burstRemainingRef.current -= 1;
+      nextSpawnIntervalRef.current = baseInterval(
+        BURST_PIPE_INTERVAL,
+        BURST_INTERVAL_JITTER
+      );
+      return;
+    }
+
+    if (Math.random() < BURST_CHANCE) {
+      const burstCount = randomInt(BURST_MIN_COUNT, BURST_MAX_COUNT);
+      burstRemainingRef.current = burstCount - 1;
+      nextSpawnIntervalRef.current = baseInterval(
+        BURST_PIPE_INTERVAL,
+        BURST_INTERVAL_JITTER
+      );
+      return;
+    }
+
+    nextSpawnIntervalRef.current = baseInterval(
+      BASE_PIPE_INTERVAL,
+      PIPE_INTERVAL_JITTER
+    );
+  }, []);
+
   const stepGame = useCallback(
     (deltaSeconds) => {
       const { width, height } = boardRef.current;
@@ -133,9 +174,10 @@ export function JumpCubeGame({
       cube.y += velocityRef.current * deltaSeconds;
 
       spawnTimerRef.current += deltaSeconds * 1000;
-      if (spawnTimerRef.current >= PIPE_INTERVAL) {
-        spawnTimerRef.current -= PIPE_INTERVAL;
+      if (spawnTimerRef.current >= nextSpawnIntervalRef.current) {
+        spawnTimerRef.current -= nextSpawnIntervalRef.current;
         spawnObstacle();
+        scheduleNextSpawn();
       }
 
       obstaclesRef.current.forEach((pipe) => {
@@ -178,7 +220,7 @@ export function JumpCubeGame({
 
       draw();
     },
-    [draw, finishGame, spawnObstacle]
+    [draw, finishGame, scheduleNextSpawn, spawnObstacle]
   );
 
   const jump = useCallback(() => {

@@ -407,7 +407,7 @@ export default function SnakePage() {
           </p>
           <Link
             href="/"
-            className="mt-6 rounded-full border border-white/20 bg-[rgba(6,8,16,0.65)] px-4 py-2.5 text-[12px] uppercase tracking-[0.16em] text-white/80 transition hover:border-[#6fd6ff] hover:text-white"
+            className="mt-6 rounded-full border border-white/25 bg-[rgba(8,12,22,0.85)] px-4 py-2.5 text-[12px] uppercase tracking-[0.18em] text-white/90 shadow-[0_10px_22px_rgba(111,214,255,0.3)] transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[#ff9ffc] hover:text-white hover:shadow-[0_16px_28px_rgba(255,159,252,0.45)]"
           >
             Volver al inicio
           </Link>
@@ -446,7 +446,7 @@ export default function SnakePage() {
           <button
             type="button"
             onClick={handleLogout}
-            className="rounded-full border border-white/20 bg-[rgba(6,8,16,0.65)] px-3 py-1.5 text-[10px] uppercase tracking-[0.16em] text-white/80 transition hover:border-[#6fd6ff] hover:text-white"
+            className="rounded-full border border-white/25 bg-[rgba(8,12,22,0.85)] px-3 py-1.5 text-[10px] uppercase tracking-[0.16em] text-white/90 shadow-[0_8px_18px_rgba(111,214,255,0.3)] transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[#6fd6ff] hover:text-white hover:shadow-[0_14px_26px_rgba(111,214,255,0.45)]"
           >
             Cerrar sesion
           </button>
@@ -462,7 +462,7 @@ export default function SnakePage() {
               <button
                 type="button"
                 onClick={handleBack}
-                className="transition hover:text-white"
+                className="rounded-full border border-white/25 bg-[rgba(8,12,22,0.8)] px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-white/90 shadow-[0_8px_18px_rgba(111,214,255,0.3)] transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[#ff9ffc] hover:text-white hover:shadow-[0_14px_26px_rgba(255,159,252,0.45)]"
               >
                 Volver
               </button>
@@ -511,7 +511,7 @@ export default function SnakePage() {
                       type="button"
                       onClick={handleReplay}
                       disabled={isReplaying}
-                      className="w-full rounded-full border border-white/20 bg-[rgba(6,8,16,0.65)] px-4 py-2 text-[11px] uppercase tracking-[0.18em] text-[#ff9ffc] transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[#ff9ffc] hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+                      className="w-full rounded-full bg-gradient-to-r from-[#ff9ffc] via-[#9fe3ff] to-[#7ef3b2] px-4 py-2.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#05020c] shadow-[0_16px_30px_rgba(255,159,252,0.45)] transition duration-200 ease-out hover:-translate-y-0.5 hover:shadow-[0_22px_40px_rgba(111,214,255,0.55)] hover:from-[#ffd1ff] hover:via-[#bfeeff] hover:to-[#b7f7d9] disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {isReplaying
                         ? "Procesando..."
@@ -521,7 +521,7 @@ export default function SnakePage() {
                       type="button"
                       onClick={handleBack}
                       disabled={isReplaying}
-                      className="w-full rounded-full border border-white/20 bg-[rgba(6,8,16,0.35)] px-4 py-2 text-[11px] uppercase tracking-[0.18em] text-white/70 transition hover:border-white/40 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+                      className="w-full rounded-full border border-white/25 bg-[rgba(8,12,22,0.65)] px-4 py-2 text-[11px] uppercase tracking-[0.18em] text-white/90 shadow-[0_8px_18px_rgba(111,214,255,0.25)] transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[#ff9ffc] hover:text-white hover:shadow-[0_14px_26px_rgba(255,159,252,0.35)] disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       Volver
                     </button>

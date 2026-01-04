@@ -279,4 +279,10 @@ export const MINIGAMES = [
     description: "Salta entre obstaculos y supera tu record.",
     href: "/minijuego/jumpcube",
   },
+  {
+    id: "shotcube",
+    name: "ShotCube",
+    description: "Apunta con el mouse y derriba cubos sin fallar.",
+    href: "/minijuego/shotcube",
+  },
 ];

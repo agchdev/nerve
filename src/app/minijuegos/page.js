@@ -193,7 +193,7 @@ export default function MinijuegosPage() {
           </p>
           <Link
             href="/"
-            className="mt-6 rounded-full border border-white/20 bg-[rgba(6,8,16,0.65)] px-4 py-2.5 text-[12px] uppercase tracking-[0.16em] text-white/80 transition hover:border-[#6fd6ff] hover:text-white"
+            className="mt-6 rounded-full border border-white/25 bg-[rgba(8,12,22,0.85)] px-4 py-2.5 text-[12px] uppercase tracking-[0.18em] text-white/90 shadow-[0_10px_22px_rgba(111,214,255,0.3)] transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[#ff9ffc] hover:text-white hover:shadow-[0_16px_28px_rgba(255,159,252,0.45)]"
           >
             Volver al inicio
           </Link>
@@ -258,7 +258,7 @@ export default function MinijuegosPage() {
           </span>
           <Link
             href="/"
-            className="rounded-full border border-white/20 bg-[rgba(6,8,16,0.65)] px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-white/80 transition duration-200 ease-out hover:border-[#6fd6ff] hover:text-white"
+            className="rounded-full border border-[#6fd6ff]/60 bg-transparent px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-white/90 transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[#ff9ffc] hover:text-white"
           >
             Volver
           </Link>
@@ -266,54 +266,64 @@ export default function MinijuegosPage() {
         <p className="mt-3 text-[11px] uppercase tracking-[0.25em] text-white/60">
           Minijuegos
         </p>
+        <p className="mt-2 text-[10px] uppercase tracking-[0.28em] text-white/50">
+          Desliza para ver más →
+        </p>
 
-        <div className="mt-6 grid w-full gap-4 sm:grid-cols-2">
-          {MINIGAMES.map((game) => {
-            const imageUrl = gameImages[game.id];
-            const priceValue = gamePrices[game.id];
-            const priceLabel = Number.isFinite(priceValue)
-              ? `${priceValue} monedas`
-              : isMetaLoading
-              ? "Cargando..."
-              : "Sin precio";
+        <div className="relative mt-6 w-full">
+          <div className="flex w-full gap-4 overflow-x-auto pb-4 pr-10 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {MINIGAMES.map((game) => {
+              const imageUrl = gameImages[game.id];
+              const priceValue = gamePrices[game.id];
+              const priceLabel = Number.isFinite(priceValue)
+                ? `${priceValue} monedas`
+                : isMetaLoading
+                ? "Cargando..."
+                : "Sin precio";
 
-            return (
-              <div
-                key={game.id}
-                className="group flex h-full flex-col justify-between rounded-2xl border border-white/15 bg-[rgba(8,10,18,0.85)] p-5 text-left text-white/80 transition duration-200 ease-out hover:-translate-y-1 hover:border-[#ff9ffc] hover:text-white"
-              >
-                <div>
-                  {imageUrl ? (
-                    <div className="mb-4 overflow-hidden rounded-xl border border-white/10 bg-[rgba(6,8,16,0.6)]">
-                      <img
-                        src={imageUrl}
-                        alt={`Imagen de ${game.name}`}
-                        className="h-full w-full object-cover"
-                        loading="lazy"
-                      />
-                    </div>
-                  ) : null}
-                  <p className="truncate text-[12px] uppercase tracking-[0.18em] text-white/70">
-                    {game.name}
-                  </p>
-                  <p className="mt-2 truncate text-sm text-white/60">
-                    {game.description}
-                  </p>
-                  <p className="mt-3 truncate text-[10px] uppercase tracking-[0.2em] text-white/50">
-                    Precio: <span className="text-[#ff9ffc]">{priceLabel}</span>
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => router.push(game.href)}
-                  className="mt-4 w-full truncate rounded-full border border-white/20 bg-[rgba(6,8,16,0.65)] px-3 py-2 text-[11px] uppercase tracking-[0.18em] text-[#ff9ffc] transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[#ff9ffc] hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+              return (
+                <div
+                  key={game.id}
+                  className="group flex h-full w-[240px] shrink-0 flex-col justify-between rounded-2xl border border-white/15 bg-[rgba(8,10,18,0.85)] p-5 text-left text-white/80 transition duration-200 ease-out hover:-translate-y-1 hover:border-[#ff9ffc] hover:text-white sm:w-[280px]"
                 >
-                  {priceLabel}
-                </button>
-              </div>
-            );
-          })}
+                  <div>
+                    {imageUrl ? (
+                      <div className="mb-4 overflow-hidden rounded-xl border border-white/10 bg-[rgba(6,8,16,0.6)]">
+                        <img
+                          src={imageUrl}
+                          alt={`Imagen de ${game.name}`}
+                          className="h-full w-full object-cover"
+                          loading="lazy"
+                        />
+                      </div>
+                    ) : null}
+                    <p className="truncate text-[12px] uppercase tracking-[0.18em] text-white/70">
+                      {game.name}
+                    </p>
+                    <p className="mt-2 truncate text-sm text-white/60">
+                      {game.description}
+                    </p>
+                    <p className="mt-3 truncate text-[10px] uppercase tracking-[0.2em] text-white/50">
+                      Precio:{" "}
+                      <span className="text-[#ff9ffc]">{priceLabel}</span>
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => router.push(game.href)}
+                    className="mt-4 w-full truncate rounded-full border border-[#ff9ffc]/70 bg-transparent px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#ff9ffc] transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[#ff9ffc] hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    Jugar
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+          <div
+            className="pointer-events-none absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-[#07040f] to-transparent"
+            aria-hidden="true"
+          />
         </div>
       </main>
     </div>

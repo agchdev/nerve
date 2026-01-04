@@ -524,14 +524,14 @@ export default function Home() {
                   <div className="flex items-center gap-3">
                     <Link
                       href="/ajustes"
-                      className="rounded-full border border-white/20 bg-[rgba(6,8,16,0.65)] px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-white/80 transition duration-200 ease-out hover:border-[#6fd6ff] hover:text-white"
+                      className="rounded-full border border-white/25 bg-[rgba(8,12,22,0.85)] px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-white/90 shadow-[0_8px_18px_rgba(111,214,255,0.3)] transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[#ff9ffc] hover:text-white hover:shadow-[0_14px_26px_rgba(255,159,252,0.45)]"
                     >
                       Ajustes
                     </Link>
                     <button
                       type="button"
                       onClick={() => setShowRanking(false)}
-                      className="transition duration-200 ease-out hover:text-white hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.65)]"
+                      className="rounded-full border border-[#6fd6ff]/60 bg-transparent px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-white/90 transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[#ff9ffc] hover:text-white"
                     >
                       Volver
                     </button>
@@ -552,7 +552,7 @@ export default function Home() {
                         if (!games.length || isGamesLoading) return;
                         setIsGameMenuOpen((prev) => !prev);
                       }}
-                      className="flex w-full items-center justify-between rounded-xl border border-white/20 bg-[rgba(6,8,16,0.7)] px-3 py-2 text-left text-[12px] uppercase tracking-[0.16em] text-white/80 transition duration-200 ease-out hover:border-[#6fd6ff] hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+                      className="flex w-full items-center justify-between rounded-xl border border-white/25 bg-[rgba(8,12,22,0.85)] px-3 py-2 text-left text-[12px] uppercase tracking-[0.16em] text-white/90 shadow-[0_10px_22px_rgba(111,214,255,0.25)] transition duration-200 ease-out hover:border-[#ff9ffc] hover:text-white hover:shadow-[0_16px_28px_rgba(255,159,252,0.35)] disabled:cursor-not-allowed disabled:opacity-60"
                       aria-haspopup="listbox"
                       aria-expanded={isGameMenuOpen}
                       disabled={!games.length || isGamesLoading}
@@ -681,7 +681,7 @@ export default function Home() {
                       onClick={() =>
                         setRankingPage(Math.max(1, currentRankingPage - 1))
                       }
-                      className="rounded-full border border-white/15 bg-[rgba(6,8,16,0.65)] px-3 py-1 text-white/70 transition duration-200 hover:border-[#6fd6ff] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                      className="rounded-full border border-white/25 bg-[rgba(8,12,22,0.8)] px-3 py-1 text-white/90 shadow-[0_8px_18px_rgba(111,214,255,0.25)] transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[#6fd6ff] hover:text-white hover:shadow-[0_14px_26px_rgba(111,214,255,0.4)] disabled:cursor-not-allowed disabled:opacity-50"
                       disabled={currentRankingPage <= 1}
                     >
                       Anterior
@@ -696,7 +696,7 @@ export default function Home() {
                           Math.min(totalRankingPages, currentRankingPage + 1)
                         )
                       }
-                      className="rounded-full border border-white/15 bg-[rgba(6,8,16,0.65)] px-3 py-1 text-white/70 transition duration-200 hover:border-[#ff9ffc] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                      className="rounded-full border border-white/25 bg-[rgba(8,12,22,0.8)] px-3 py-1 text-white/90 shadow-[0_8px_18px_rgba(111,214,255,0.25)] transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[#ff9ffc] hover:text-white hover:shadow-[0_14px_26px_rgba(255,159,252,0.4)] disabled:cursor-not-allowed disabled:opacity-50"
                       disabled={currentRankingPage >= totalRankingPages}
                     >
                       Siguiente
@@ -709,19 +709,19 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={handleShowRanking}
-                  className="inline-flex w-full items-center justify-center rounded-full border border-white/20 bg-[rgba(6,8,16,0.65)] px-4 py-2.5 text-[12px] uppercase tracking-[0.16em] text-white/80 transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[#6fd6ff] hover:bg-[rgba(14,22,38,0.85)] hover:text-white hover:shadow-[0_12px_28px_rgba(111,214,255,0.4)]"
+                  className="inline-flex w-full items-center justify-center rounded-full border border-[#6fd6ff]/70 bg-transparent px-4 py-2.5 text-[12px] font-semibold uppercase tracking-[0.18em] text-white/90 transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[#ff9ffc] hover:text-white hover:shadow-[0_0_18px_rgba(255,159,252,0.45)]"
                 >
                   Ver clasificación
                 </button>
                 <Link
                   href="/minijuegos"
-                  className="inline-flex w-full items-center justify-center rounded-full border border-white/20 bg-[rgba(6,8,16,0.65)] px-4 py-2.5 text-[12px] uppercase tracking-[0.16em] text-white/80 transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[#ff9ffc] hover:bg-[rgba(24,14,30,0.85)] hover:text-white hover:shadow-[0_12px_28px_rgba(255,159,252,0.4)]"
+                className="inline-flex w-full items-center justify-center rounded-full border border-[#ff9ffc]/70 bg-transparent px-4 py-2.5 text-[12px] font-semibold uppercase tracking-[0.18em] text-white/90 transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[#ff9ffc] hover:text-white hover:shadow-[0_0_18px_rgba(255,159,252,0.45)]"
                 >
                   Jugar minijuego
                 </Link>
                 <Link
                   href="/ajustes"
-                  className="inline-flex w-full items-center justify-center rounded-full border border-white/20 bg-[rgba(6,8,16,0.65)] px-4 py-2.5 text-[12px] uppercase tracking-[0.16em] text-white/80 transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[#6fd6ff] hover:bg-[rgba(14,22,38,0.85)] hover:text-white hover:shadow-[0_12px_28px_rgba(111,214,255,0.35)]"
+                  className="inline-flex w-full items-center justify-center rounded-full border border-[#6fd6ff]/70 bg-transparent px-4 py-2.5 text-[12px] font-semibold uppercase tracking-[0.18em] text-white/90 transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[#ff9ffc] hover:text-white"
                 >
                   Ajustes de cuenta
                 </Link>
@@ -927,7 +927,7 @@ export default function Home() {
               ) : null}
 
               <button
-                className="w-full rounded-full bg-gradient-to-br from-[#ff9ffc] to-[#6fd6ff] px-5 py-3 text-[13px] font-semibold uppercase tracking-[0.12em] text-[#05020c] shadow-[0_14px_30px_rgba(111,214,255,0.28)] transition duration-200 ease-out hover:-translate-y-0.5 hover:scale-[1.01] hover:from-[#ffd0ff] hover:to-[#9fe3ff] hover:shadow-[0_20px_40px_rgba(255,159,252,0.5)] disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none"
+                className="w-full rounded-full bg-gradient-to-r from-[#ff9ffc] via-[#9fe3ff] to-[#7ef3b2] px-5 py-3 text-[13px] font-semibold uppercase tracking-[0.12em] text-[#05020c] shadow-[0_18px_36px_rgba(255,159,252,0.45)] transition duration-200 ease-out hover:-translate-y-0.5 hover:scale-[1.01] hover:from-[#ffd1ff] hover:via-[#bfeeff] hover:to-[#b7f7d9] hover:shadow-[0_26px_46px_rgba(111,214,255,0.6)] disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none"
                 type="submit"
                 disabled={isLoading}
               >

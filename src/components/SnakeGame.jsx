@@ -326,7 +326,7 @@ export function SnakeGame({
   const isActionDisabled = controlsLocked || status === "running";
 
   const controlButtonClass =
-    "flex h-20 w-full items-center justify-center rounded-2xl border border-white/20 bg-[rgba(6,8,16,0.65)] text-3xl font-semibold text-white/80 transition hover:border-[#6fd6ff] hover:text-white active:scale-[0.98] touch-manipulation";
+    "flex h-20 w-full items-center justify-center rounded-2xl border border-white/25 bg-[linear-gradient(135deg,rgba(17,24,39,0.9),rgba(10,18,32,0.8))] text-3xl font-semibold text-white/90 shadow-[0_10px_22px_rgba(111,214,255,0.35)] transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[#ff9ffc] hover:text-white hover:shadow-[0_16px_28px_rgba(255,159,252,0.45)] active:scale-[0.98] touch-manipulation";
 
   return (
     <div className="mt-4 flex w-full flex-col items-center">
@@ -359,7 +359,7 @@ export function SnakeGame({
           if (!isActionDisabled) startGame();
         }}
         disabled={isActionDisabled}
-        className="mt-4 rounded-full border border-white/20 bg-[rgba(6,8,16,0.65)] px-4 py-2 text-[11px] uppercase tracking-[0.18em] text-white/80 transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[#6fd6ff] hover:bg-[rgba(14,22,38,0.85)] hover:text-white hover:shadow-[0_12px_28px_rgba(111,214,255,0.4)] disabled:cursor-not-allowed disabled:opacity-60"
+        className="mt-4 rounded-full bg-gradient-to-r from-[#ff9ffc] via-[#9fe3ff] to-[#7ef3b2] px-4 py-2.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#05020c] shadow-[0_16px_30px_rgba(255,159,252,0.45)] transition duration-200 ease-out hover:-translate-y-0.5 hover:shadow-[0_22px_40px_rgba(111,214,255,0.55)] hover:from-[#ffd1ff] hover:via-[#bfeeff] hover:to-[#b7f7d9] disabled:cursor-not-allowed disabled:opacity-60"
       >
         {actionLabel}
       </button>

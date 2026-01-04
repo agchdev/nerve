@@ -194,7 +194,7 @@ function VerificacionContent() {
           </p>
           <Link
             href="/"
-            className="mt-6 rounded-full border border-white/20 bg-[rgba(6,8,16,0.65)] px-4 py-2.5 text-[12px] uppercase tracking-[0.16em] text-white/80 transition hover:border-[#6fd6ff] hover:text-white"
+            className="mt-6 rounded-full border border-white/25 bg-[rgba(8,12,22,0.85)] px-4 py-2.5 text-[12px] uppercase tracking-[0.18em] text-white/90 shadow-[0_10px_22px_rgba(111,214,255,0.3)] transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[#ff9ffc] hover:text-white hover:shadow-[0_16px_28px_rgba(255,159,252,0.45)]"
           >
             Volver al inicio
           </Link>
@@ -241,7 +241,7 @@ function VerificacionContent() {
             type="button"
             onClick={handleSendCode}
             disabled={isSending || isChecking}
-            className="mt-5 w-full rounded-full border border-white/20 bg-[rgba(6,8,16,0.65)] px-4 py-2.5 text-[12px] uppercase tracking-[0.16em] text-white/80 transition hover:border-[#6fd6ff] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+            className="mt-5 w-full rounded-full bg-gradient-to-r from-[#ff9ffc] via-[#9fe3ff] to-[#7ef3b2] px-4 py-3 text-[12px] font-semibold uppercase tracking-[0.18em] text-[#05020c] shadow-[0_16px_30px_rgba(255,159,252,0.45)] transition duration-200 ease-out hover:-translate-y-0.5 hover:shadow-[0_22px_40px_rgba(111,214,255,0.55)] hover:from-[#ffd1ff] hover:via-[#bfeeff] hover:to-[#b7f7d9] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isSending ? "Enviando..." : "Enviar WhatsApp"}
           </button>
@@ -262,7 +262,7 @@ function VerificacionContent() {
                 type="button"
                 onClick={handleVerifyCode}
                 disabled={isVerifying || !codigo.trim()}
-                className="rounded-full border border-white/20 bg-[rgba(6,8,16,0.65)] px-4 py-2 text-[11px] uppercase tracking-[0.16em] text-white/80 transition hover:border-[#ff9ffc] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-full bg-gradient-to-r from-[#ff9ffc] via-[#9fe3ff] to-[#7ef3b2] px-4 py-2.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#05020c] shadow-[0_14px_26px_rgba(255,159,252,0.4)] transition duration-200 ease-out hover:-translate-y-0.5 hover:shadow-[0_20px_36px_rgba(111,214,255,0.55)] hover:from-[#ffd1ff] hover:via-[#bfeeff] hover:to-[#b7f7d9] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isVerifying ? "Verificando..." : "Confirmar"}
               </button>
@@ -284,7 +284,7 @@ function VerificacionContent() {
 
         <Link
           href="/ajustes"
-          className="mt-6 inline-flex w-full max-w-[360px] items-center justify-center rounded-full border border-white/20 bg-[rgba(6,8,16,0.65)] px-4 py-2.5 text-[12px] uppercase tracking-[0.16em] text-white/80 transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[#6fd6ff] hover:text-white"
+          className="mt-6 inline-flex w-full max-w-[360px] items-center justify-center rounded-full border border-[#6fd6ff]/70 bg-transparent px-4 py-2.5 text-[12px] font-semibold uppercase tracking-[0.18em] text-white/90 transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[#ff9ffc] hover:text-white"
         >
           Ir a ajustes de cuenta
         </Link>

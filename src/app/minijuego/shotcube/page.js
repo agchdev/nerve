@@ -6,10 +6,10 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { CoinsBadge } from "@/components/CoinsBadge";
 import { GridScan } from "@/components/GridScan";
-import { JumpCubeGame } from "@/components/JumpCubeGame";
+import { ShotCubeGame } from "@/components/ShotCubeGame";
 import { SnakeIntro } from "@/components/SnakeIntro";
 
-export default function JumpCubePage() {
+export default function ShotCubePage() {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
@@ -55,7 +55,7 @@ export default function JumpCubePage() {
       setIsGameLoading(true);
       setGameStatus(initialStatus);
       try {
-        const response = await fetch("/api/juegos/jumpcube");
+        const response = await fetch("/api/juegos/shotcube");
         const data = await response.json().catch(() => ({}));
         if (!response.ok) {
           if (isMounted) {
@@ -113,7 +113,7 @@ export default function JumpCubePage() {
           if (isMounted) {
             setIsVerified(false);
             router.replace(
-              `/verificacion?next=${encodeURIComponent("/minijuego/jumpcube")}`
+              `/verificacion?next=${encodeURIComponent("/minijuego/shotcube")}`
             );
           }
           return;
@@ -124,7 +124,7 @@ export default function JumpCubePage() {
           setIsVerified(verified);
           if (!verified) {
             router.replace(
-              `/verificacion?next=${encodeURIComponent("/minijuego/jumpcube")}`
+              `/verificacion?next=${encodeURIComponent("/minijuego/shotcube")}`
             );
           }
         }
@@ -132,7 +132,7 @@ export default function JumpCubePage() {
         if (isMounted) {
           setIsVerified(false);
           router.replace(
-            `/verificacion?next=${encodeURIComponent("/minijuego/jumpcube")}`
+            `/verificacion?next=${encodeURIComponent("/minijuego/shotcube")}`
           );
         }
       } finally {
@@ -483,14 +483,14 @@ export default function JumpCubePage() {
               </button>
             </div>
             <p className="mt-3 text-[11px] uppercase tracking-[0.25em] text-white/60">
-              JumpCube
+              ShotCube
             </p>
           </>
         )}
 
         {showGame ? (
           <div className="relative flex h-full w-full flex-1 flex-col">
-            <JumpCubeGame
+            <ShotCubeGame
               onGameOver={handleGameOver}
               startSignal={startSignal}
               controlsLocked={showReplayModal}
