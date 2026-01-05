@@ -285,4 +285,10 @@ export const MINIGAMES = [
     description: "Apunta con el mouse y derriba cubos sin fallar.",
     href: "/minijuego/shotcube",
   },
+  {
+    id: "ruleta",
+    name: "Ruleta",
+    description: "Apuesta en la ruleta y conoce las reglas.",
+    href: "/minijuego/ruleta",
+  },
 ];

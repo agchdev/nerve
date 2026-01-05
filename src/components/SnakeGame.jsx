@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 const GRID_SIZE = 20;
 const TICK_MS = 160;
 const STORAGE_KEY = "agch_snake_best";
+const COUNTDOWN_SECONDS = 3;
 
 const createInitialSnake = () => {
   const mid = Math.floor(GRID_SIZE / 2);
@@ -43,6 +44,7 @@ export function SnakeGame({
   const directionRef = useRef({ x: 1, y: 0 });
   const nextDirectionRef = useRef({ x: 1, y: 0 });
   const statusRef = useRef("idle");
+  const pendingDirectionRef = useRef(null);
   const touchStartRef = useRef(null);
   const lastSentScoreRef = useRef(null);
   const scoreRef = useRef(0);
@@ -51,6 +53,7 @@ export function SnakeGame({
   const [status, setStatus] = useState("idle");
   const [score, setScore] = useState(0);
   const [bestScore, setBestScore] = useState(0);
+  const [countdown, setCountdown] = useState(0);
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
@@ -113,8 +116,12 @@ export function SnakeGame({
   }, [draw]);
 
   const startGame = useCallback(
-    (initialDirection) => {
-      resetBoard();
+    (options = {}) => {
+      const { initialDirection, skipReset = false } = options;
+      if (!skipReset) {
+        resetBoard();
+      }
+      setCountdown(0);
       lastSentScoreRef.current = null;
       startTimeRef.current = Date.now();
       if (initialDirection) {
@@ -122,6 +129,17 @@ export function SnakeGame({
         nextDirectionRef.current = initialDirection;
       }
       setStatus("running");
+    },
+    [resetBoard]
+  );
+
+  const beginCountdown = useCallback(
+    (initialDirection = null) => {
+      if (statusRef.current === "running") return;
+      pendingDirectionRef.current = initialDirection;
+      resetBoard();
+      setStatus("countdown");
+      setCountdown(COUNTDOWN_SECONDS);
     },
     [resetBoard]
   );
@@ -149,12 +167,16 @@ export function SnakeGame({
         return;
       }
 
-      nextDirectionRef.current = next;
-      if (statusRef.current !== "running") {
-        startGame(next);
+      if (statusRef.current === "running") {
+        nextDirectionRef.current = next;
+        return;
       }
+
+      pendingDirectionRef.current = next;
+      if (countdown > 0) return;
+      beginCountdown(next);
     },
-    [controlsLocked, startGame]
+    [beginCountdown, controlsLocked, countdown]
   );
 
   const stepGame = useCallback(() => {
@@ -215,7 +237,9 @@ export function SnakeGame({
 
       if (key === " " || key === "enter") {
         if (statusRef.current !== "running") {
-          startGame();
+          if (countdown === 0) {
+            beginCountdown();
+          }
         }
         return;
       }
@@ -224,7 +248,7 @@ export function SnakeGame({
       event.preventDefault();
       queueDirection(next);
     },
-    [controlsLocked, queueDirection, startGame]
+    [beginCountdown, controlsLocked, countdown, queueDirection]
   );
 
   const handleTouchStart = useCallback(
@@ -288,6 +312,21 @@ export function SnakeGame({
   }, [status, stepGame]);
 
   useEffect(() => {
+    if (countdown <= 0) return undefined;
+    const timeout = window.setTimeout(() => {
+      setCountdown((prev) => Math.max(0, prev - 1));
+    }, 1000);
+    return () => window.clearTimeout(timeout);
+  }, [countdown]);
+
+  useEffect(() => {
+    if (countdown !== 0 || status !== "countdown") return;
+    const initialDirection = pendingDirectionRef.current;
+    pendingDirectionRef.current = null;
+    startGame({ initialDirection, skipReset: true });
+  }, [countdown, startGame, status]);
+
+  useEffect(() => {
     const handleResize = () => {
       const canvas = canvasRef.current;
       if (!canvas) return;
@@ -318,15 +357,33 @@ export function SnakeGame({
 
   useEffect(() => {
     if (!startSignal) return;
-    startGame();
-  }, [startGame, startSignal]);
+    beginCountdown();
+  }, [beginCountdown, startSignal]);
 
   const actionLabel =
-    status === "running" ? "Jugando..." : status === "gameover" ? "Reintentar" : "Empezar";
-  const isActionDisabled = controlsLocked || status === "running";
+    status === "running"
+      ? "Jugando..."
+      : status === "countdown"
+        ? countdown > 0
+          ? `Empieza en ${countdown}`
+          : "Empieza ya"
+        : status === "gameover"
+          ? "Reintentar"
+          : "Empezar";
+  const isActionDisabled =
+    controlsLocked || status === "running" || status === "countdown";
 
   const controlButtonClass =
     "flex h-20 w-full items-center justify-center rounded-2xl border border-white/25 bg-[linear-gradient(135deg,rgba(17,24,39,0.9),rgba(10,18,32,0.8))] text-3xl font-semibold text-white/90 shadow-[0_10px_22px_rgba(111,214,255,0.35)] transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[#ff9ffc] hover:text-white hover:shadow-[0_16px_28px_rgba(255,159,252,0.45)] active:scale-[0.98] touch-manipulation";
+
+  const overlayLabel =
+    status === "countdown"
+      ? countdown > 0
+        ? String(countdown)
+        : "YA"
+      : status === "gameover"
+        ? "Game Over"
+        : "Listo";
 
   return (
     <div className="mt-4 flex w-full flex-col items-center">
@@ -347,7 +404,7 @@ export function SnakeGame({
           />
           {status !== "running" ? (
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-2xl bg-[rgba(4,6,12,0.55)] text-sm uppercase tracking-[0.2em] text-white/80">
-              {status === "gameover" ? "Game Over" : "Listo"}
+              {overlayLabel}
             </div>
           ) : null}
         </div>
@@ -356,7 +413,7 @@ export function SnakeGame({
       <button
         type="button"
         onClick={() => {
-          if (!isActionDisabled) startGame();
+          if (!isActionDisabled) beginCountdown();
         }}
         disabled={isActionDisabled}
         className="mt-4 rounded-full bg-gradient-to-r from-[#ff9ffc] via-[#9fe3ff] to-[#7ef3b2] px-4 py-2.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#05020c] shadow-[0_16px_30px_rgba(255,159,252,0.45)] transition duration-200 ease-out hover:-translate-y-0.5 hover:shadow-[0_22px_40px_rgba(111,214,255,0.55)] hover:from-[#ffd1ff] hover:via-[#bfeeff] hover:to-[#b7f7d9] disabled:cursor-not-allowed disabled:opacity-60"

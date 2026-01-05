@@ -6,15 +6,19 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "ruleta:server": "node server/ruleta-server.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",
+    "dotenv": "^16.4.5",
     "face-api.js": "^0.22.2",
     "next": "16.1.1",
     "postprocessing": "^6.38.2",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "socket.io": "^4.7.5",
+    "socket.io-client": "^4.7.5",
     "three": "^0.182.0"
   },
   "devDependencies": {

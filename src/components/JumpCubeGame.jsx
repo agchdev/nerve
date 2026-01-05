@@ -4,21 +4,23 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 const STORAGE_KEY = "agch_jumpcube_best";
 const BASE_PIPE_INTERVAL = 1750;
-const BURST_PIPE_INTERVAL = 950;
-const PIPE_INTERVAL_JITTER = 220;
-const BURST_INTERVAL_JITTER = 140;
-const BURST_CHANCE = 0.18;
-const BURST_MIN_COUNT = 2;
-const BURST_MAX_COUNT = 3;
 const PIPE_SPEED = 220;
 const PIPE_WIDTH = 56;
 const PIPE_GAP = 140;
 const GRAVITY = 1600;
 const JUMP_VELOCITY = -470;
+const COUNTDOWN_SECONDS = 3;
+const COIN_POPUP_VALUE = 5;
+const POPUP_DURATION = 900;
+const POPUP_RISE = 26;
+const POPUP_COLORS = {
+  coin: { fill: [255, 247, 179], stroke: [6, 8, 16] },
+};
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+const rgba = (rgb, alpha) =>
+  `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${alpha})`;
 const randomBetween = (min, max) => min + Math.random() * (max - min);
-const randomInt = (min, max) => Math.floor(randomBetween(min, max + 1));
 
 export function JumpCubeGame({
   onGameOver,
@@ -32,17 +34,41 @@ export function JumpCubeGame({
   const velocityRef = useRef(0);
   const obstaclesRef = useRef([]);
   const spawnTimerRef = useRef(0);
-  const nextSpawnIntervalRef = useRef(BASE_PIPE_INTERVAL);
-  const burstRemainingRef = useRef(0);
   const statusRef = useRef("idle");
   const lastSentScoreRef = useRef(null);
   const scoreRef = useRef(0);
   const startTimeRef = useRef(null);
-  const allowStartRef = useRef(false);
+  const popupsRef = useRef([]);
 
   const [status, setStatus] = useState("idle");
   const [score, setScore] = useState(0);
   const [bestScore, setBestScore] = useState(0);
+  const [countdown, setCountdown] = useState(0);
+
+  const addPopup = useCallback((x, y, text, type = "coin") => {
+    popupsRef.current.push({
+      x,
+      y,
+      text,
+      type,
+      spawnedAt: performance.now(),
+    });
+  }, []);
+
+  const addCoinPopup = useCallback(
+    (x, y) => {
+      const { width, height } = boardRef.current;
+      if (!width || !height) return;
+      const label = COIN_POPUP_VALUE === 1 ? "moneda" : "monedas";
+      addPopup(
+        clamp(x, 14, width - 14),
+        clamp(y, 14, height - 14),
+        `+${COIN_POPUP_VALUE} ${label}`,
+        "coin"
+      );
+    },
+    [addPopup]
+  );
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
@@ -50,6 +76,7 @@ export function JumpCubeGame({
     const ctx = canvas.getContext("2d");
     const { width, height } = boardRef.current;
     if (!width || !height) return;
+    const now = performance.now();
 
     ctx.clearRect(0, 0, width, height);
     ctx.fillStyle = "rgba(6, 8, 16, 0.78)";
@@ -67,6 +94,32 @@ export function JumpCubeGame({
     const cube = cubeRef.current;
     ctx.fillStyle = "#f5f0ff";
     ctx.fillRect(cube.x, cube.y, cube.size, cube.size);
+
+    const popups = popupsRef.current;
+    if (popups.length) {
+      ctx.save();
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.font = "600 12px 'Press Start 2P', sans-serif";
+      popups.forEach((popup) => {
+        const palette = POPUP_COLORS[popup.type] || POPUP_COLORS.coin;
+        const age = clamp(
+          (now - popup.spawnedAt) / POPUP_DURATION,
+          0,
+          1
+        );
+        const rise = POPUP_RISE * age;
+        const alpha = 1 - age;
+        const y = popup.y - rise;
+
+        ctx.strokeStyle = rgba(palette.stroke, 0.7 * alpha);
+        ctx.fillStyle = rgba(palette.fill, 0.95 * alpha);
+        ctx.lineWidth = 3;
+        ctx.strokeText(popup.text, popup.x, y);
+        ctx.fillText(popup.text, popup.x, y);
+      });
+      ctx.restore();
+    }
   }, []);
 
   const resetBoard = useCallback(() => {
@@ -81,10 +134,9 @@ export function JumpCubeGame({
     };
     velocityRef.current = 0;
     obstaclesRef.current = [];
-    burstRemainingRef.current = 0;
-    nextSpawnIntervalRef.current = BASE_PIPE_INTERVAL;
-    spawnTimerRef.current = nextSpawnIntervalRef.current;
+    spawnTimerRef.current = BASE_PIPE_INTERVAL;
     scoreRef.current = 0;
+    popupsRef.current = [];
     setScore(0);
     draw();
   }, [draw]);
@@ -94,12 +146,20 @@ export function JumpCubeGame({
       if (!options.skipReset) {
         resetBoard();
       }
+      setCountdown(0);
       lastSentScoreRef.current = null;
       startTimeRef.current = Date.now();
       setStatus("running");
     },
     [resetBoard]
   );
+
+  const beginCountdown = useCallback(() => {
+    if (statusRef.current === "running") return;
+    resetBoard();
+    setStatus("countdown");
+    setCountdown(COUNTDOWN_SECONDS);
+  }, [resetBoard]);
 
   const finishGame = useCallback(() => {
     setStatus("gameover");
@@ -126,7 +186,7 @@ export function JumpCubeGame({
     const bottomMargin = Math.max(32, height * 0.1);
     const minY = topMargin + gapHalf;
     const maxY = Math.max(minY, height - bottomMargin - gapHalf);
-    const gapY = minY + Math.random() * (maxY - minY);
+    const gapY = randomBetween(minY, maxY);
 
     obstaclesRef.current.push({
       x: width + PIPE_WIDTH,
@@ -135,49 +195,20 @@ export function JumpCubeGame({
     });
   }, []);
 
-  const scheduleNextSpawn = useCallback(() => {
-    const baseInterval = (value, jitter) =>
-      Math.max(650, value + randomBetween(-jitter, jitter));
-
-    if (burstRemainingRef.current > 0) {
-      burstRemainingRef.current -= 1;
-      nextSpawnIntervalRef.current = baseInterval(
-        BURST_PIPE_INTERVAL,
-        BURST_INTERVAL_JITTER
-      );
-      return;
-    }
-
-    if (Math.random() < BURST_CHANCE) {
-      const burstCount = randomInt(BURST_MIN_COUNT, BURST_MAX_COUNT);
-      burstRemainingRef.current = burstCount - 1;
-      nextSpawnIntervalRef.current = baseInterval(
-        BURST_PIPE_INTERVAL,
-        BURST_INTERVAL_JITTER
-      );
-      return;
-    }
-
-    nextSpawnIntervalRef.current = baseInterval(
-      BASE_PIPE_INTERVAL,
-      PIPE_INTERVAL_JITTER
-    );
-  }, []);
-
   const stepGame = useCallback(
     (deltaSeconds) => {
       const { width, height } = boardRef.current;
       if (!width || !height) return;
+      const now = performance.now();
 
       const cube = cubeRef.current;
       velocityRef.current += GRAVITY * deltaSeconds;
       cube.y += velocityRef.current * deltaSeconds;
 
       spawnTimerRef.current += deltaSeconds * 1000;
-      if (spawnTimerRef.current >= nextSpawnIntervalRef.current) {
-        spawnTimerRef.current -= nextSpawnIntervalRef.current;
+      if (spawnTimerRef.current >= BASE_PIPE_INTERVAL) {
+        spawnTimerRef.current -= BASE_PIPE_INTERVAL;
         spawnObstacle();
-        scheduleNextSpawn();
       }
 
       obstaclesRef.current.forEach((pipe) => {
@@ -204,6 +235,7 @@ export function JumpCubeGame({
 
         if (!pipe.passed && pipe.x + PIPE_WIDTH < cube.x) {
           pipe.passed = true;
+          addCoinPopup(cube.x + cube.size / 2, cube.y);
           setScore((prev) => {
             const next = prev + 1;
             scoreRef.current = next;
@@ -218,20 +250,22 @@ export function JumpCubeGame({
         return;
       }
 
+      if (popupsRef.current.length) {
+        popupsRef.current = popupsRef.current.filter(
+          (popup) => now - popup.spawnedAt < POPUP_DURATION
+        );
+      }
+
       draw();
     },
-    [draw, finishGame, scheduleNextSpawn, spawnObstacle]
+    [addCoinPopup, draw, finishGame, spawnObstacle]
   );
 
   const jump = useCallback(() => {
-    if (controlsLocked) return;
-    if (statusRef.current !== "running") {
-      if (!allowStartRef.current) return;
-      allowStartRef.current = false;
-      startGame({ skipReset: true });
-    }
+    if (controlsLocked || countdown > 0) return;
+    if (statusRef.current !== "running") return;
     velocityRef.current = JUMP_VELOCITY;
-  }, [controlsLocked, startGame]);
+  }, [controlsLocked, countdown]);
 
   const handleKeyDown = useCallback(
     (event) => {
@@ -286,6 +320,19 @@ export function JumpCubeGame({
   }, [status, stepGame]);
 
   useEffect(() => {
+    if (countdown <= 0) return undefined;
+    const timeout = window.setTimeout(() => {
+      setCountdown((prev) => Math.max(0, prev - 1));
+    }, 1000);
+    return () => window.clearTimeout(timeout);
+  }, [countdown]);
+
+  useEffect(() => {
+    if (countdown !== 0 || status !== "countdown") return;
+    startGame({ skipReset: true });
+  }, [countdown, startGame, status]);
+
+  useEffect(() => {
     const handleResize = () => {
       const canvas = canvasRef.current;
       if (!canvas) return;
@@ -314,10 +361,8 @@ export function JumpCubeGame({
 
   useEffect(() => {
     if (!startSignal) return;
-    allowStartRef.current = true;
-    resetBoard();
-    setStatus("idle");
-  }, [resetBoard, startSignal]);
+    beginCountdown();
+  }, [beginCountdown, startSignal]);
 
   const wrapperClassName = fullScreen
     ? "flex h-full w-full flex-col"
@@ -337,6 +382,14 @@ export function JumpCubeGame({
   const overlayClassName = fullScreen
     ? "pointer-events-none absolute inset-0 flex items-center justify-center bg-[rgba(4,6,12,0.55)] text-sm uppercase tracking-[0.2em] text-white/80"
     : "pointer-events-none absolute inset-0 flex items-center justify-center rounded-2xl bg-[rgba(4,6,12,0.55)] text-sm uppercase tracking-[0.2em] text-white/80";
+  const overlayLabel =
+    status === "countdown"
+      ? countdown > 0
+        ? String(countdown)
+        : "YA"
+      : status === "gameover"
+        ? "Game Over"
+        : "Listo";
 
   return (
     <div className={wrapperClassName}>
@@ -365,7 +418,7 @@ export function JumpCubeGame({
           <canvas className={canvasClassName} ref={canvasRef} />
           {status !== "running" ? (
             <div className={overlayClassName}>
-              {status === "gameover" ? "Game Over" : "Listo"}
+              {overlayLabel}
             </div>
           ) : null}
 

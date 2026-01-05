@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 const STORAGE_KEY = "agch_shotcube_best";
 const MAX_MISSES = 10;
 const SPAWN_INTERVAL = 1200;
+const SPAWN_SIDES = ["top", "left", "right"];
 const MIN_LIFETIME = 1100;
 const MAX_LIFETIME = 1700;
 const MAX_CUBES = 4;
@@ -22,9 +23,11 @@ const GRAVITY_MAX = 1800;
 const GRAVITY_SCALE = 1.2;
 const LAUNCH_SPEED_MIN = 520;
 const LAUNCH_SPEED_MAX = 980;
+const DRIFT_RATIO = 0.25;
 const COIN_POPUP_VALUE = 5;
 const POPUP_DURATION = 900;
 const POPUP_RISE = 26;
+const COUNTDOWN_SECONDS = 3;
 const POPUP_COLORS = {
   coin: { fill: [255, 247, 179], stroke: [6, 8, 16] },
   life: { fill: [255, 82, 82], stroke: [6, 8, 16] },
@@ -40,8 +43,20 @@ const spawnIntervalForWidth = (width) =>
   isMobileWidth(width) ? MOBILE_SPAWN_INTERVAL : SPAWN_INTERVAL;
 
 const randomBetween = (min, max) => min + Math.random() * (max - min);
-const gravityForHeight = (height) =>
-  clamp(height * GRAVITY_SCALE, GRAVITY_MIN, GRAVITY_MAX);
+const gravityForLength = (length) =>
+  clamp(length * GRAVITY_SCALE, GRAVITY_MIN, GRAVITY_MAX);
+const pickSpawnSide = (sides) =>
+  sides[Math.floor(Math.random() * sides.length)];
+const randomEdgePosition = (length, padding, size) =>
+  padding + Math.random() * Math.max(0, length - padding * 2 - size);
+const timeToExit = (distance, speed, acceleration) => {
+  if (distance <= 0) return 0;
+  if (acceleration <= 0.001) {
+    return distance / Math.max(speed, 1);
+  }
+  const discriminant = speed * speed + 2 * acceleration * distance;
+  return (-speed + Math.sqrt(discriminant)) / acceleration;
+};
 
 export function ShotCubeGame({
   onGameOver,
@@ -58,7 +73,6 @@ export function ShotCubeGame({
   const scoreRef = useRef(0);
   const missesRef = useRef(0);
   const startTimeRef = useRef(null);
-  const allowStartRef = useRef(false);
   const pointerRef = useRef({ x: 0, y: 0, active: false });
   const popupsRef = useRef([]);
 
@@ -66,6 +80,7 @@ export function ShotCubeGame({
   const [score, setScore] = useState(0);
   const [bestScore, setBestScore] = useState(0);
   const [misses, setMisses] = useState(0);
+  const [countdown, setCountdown] = useState(0);
 
   const addPopup = useCallback((x, y, text, type) => {
     popupsRef.current.push({
@@ -178,7 +193,6 @@ export function ShotCubeGame({
     if (!width || !height) return;
 
     const now = performance.now();
-    const gravity = gravityForHeight(height);
     const isMobile = isMobileWidth(width);
     const sizeScale = isMobile ? SIZE_SCALE_MOBILE : SIZE_SCALE_DESKTOP;
     const sizeMin = isMobile ? SIZE_MIN_MOBILE : SIZE_MIN_DESKTOP;
@@ -190,15 +204,56 @@ export function ShotCubeGame({
       sizeMax + 12
     );
     const padding = Math.max(12, size * 0.3);
-    const maxX = Math.max(0, width - padding * 2 - size);
-    const x = padding + Math.random() * maxX;
-    const launchBase = clamp(height * 1.15, LAUNCH_SPEED_MIN, LAUNCH_SPEED_MAX);
+    const spawnSide = pickSpawnSide(SPAWN_SIDES);
+    const axisLength = spawnSide === "top" ? height : width;
+    const gravity = gravityForLength(axisLength);
+    const launchBase = clamp(
+      axisLength * 1.15,
+      LAUNCH_SPEED_MIN,
+      LAUNCH_SPEED_MAX
+    );
     const launchSpeed = randomBetween(launchBase * 0.85, launchBase * 1.05);
-    const launchLift = Math.min(height * 0.12, 48);
-    const y = height - padding - size - randomBetween(0, launchLift);
-    const timeToReturn = (2 * launchSpeed) / gravity;
-    const extraFall = Math.sqrt((2 * (size + padding)) / gravity);
-    const minLifetime = (timeToReturn + extraFall) * 1000;
+    const driftSpeed = randomBetween(
+      -launchSpeed * DRIFT_RATIO,
+      launchSpeed * DRIFT_RATIO
+    );
+
+    let x = 0;
+    let y = 0;
+    let vx = 0;
+    let vy = 0;
+    let ax = 0;
+    let ay = 0;
+    let axisDistance = 0;
+
+    if (spawnSide === "top") {
+      x = randomEdgePosition(width, padding, size);
+      y = padding;
+      vx = driftSpeed;
+      vy = launchSpeed;
+      ax = 0;
+      ay = gravity;
+      axisDistance = height + size - y;
+    } else if (spawnSide === "left") {
+      x = padding;
+      y = randomEdgePosition(height, padding, size);
+      vx = launchSpeed;
+      vy = driftSpeed;
+      ax = gravity;
+      ay = 0;
+      axisDistance = width + size - x;
+    } else {
+      x = width - padding - size;
+      y = randomEdgePosition(height, padding, size);
+      vx = -launchSpeed;
+      vy = driftSpeed;
+      ax = -gravity;
+      ay = 0;
+      axisDistance = x + size;
+    }
+
+    const minLifetime =
+      timeToExit(axisDistance, launchSpeed, gravity) * 1000;
     const lifetime = Math.max(
       randomBetween(MIN_LIFETIME, MAX_LIFETIME),
       minLifetime
@@ -208,13 +263,16 @@ export function ShotCubeGame({
       x,
       y,
       size,
-      vy: -launchSpeed,
+      vx,
+      vy,
+      ax,
+      ay,
       spawnedAt: now,
       expiresAt: now + lifetime,
     });
   }, []);
 
-  const resetBoard = useCallback(() => {
+  const resetBoard = useCallback((options = {}) => {
     const { width, height } = boardRef.current;
     if (!width || !height) return;
 
@@ -226,7 +284,9 @@ export function ShotCubeGame({
     popupsRef.current = [];
     setScore(0);
     setMisses(0);
-    spawnCube();
+    if (!options.skipSpawn) {
+      spawnCube();
+    }
     draw();
   }, [draw, spawnCube]);
 
@@ -235,12 +295,20 @@ export function ShotCubeGame({
       if (!options.skipReset) {
         resetBoard();
       }
+      setCountdown(0);
       lastSentScoreRef.current = null;
       startTimeRef.current = Date.now();
       setStatus("running");
     },
     [resetBoard]
   );
+
+  const beginCountdown = useCallback(() => {
+    if (statusRef.current === "running") return;
+    resetBoard({ skipSpawn: true });
+    setStatus("countdown");
+    setCountdown(COUNTDOWN_SECONDS);
+  }, [resetBoard]);
 
   const finishGame = useCallback(() => {
     setStatus("gameover");
@@ -276,7 +344,6 @@ export function ShotCubeGame({
       const { width, height } = boardRef.current;
       if (!width || !height) return;
 
-      const gravity = gravityForHeight(height);
       const spawnInterval = spawnIntervalForWidth(width);
       const maxCubes = maxCubesForWidth(width);
       spawnTimerRef.current += deltaSeconds * 1000;
@@ -293,12 +360,19 @@ export function ShotCubeGame({
         let missesTotal = missesRef.current;
 
         for (const cube of cubesRef.current) {
-          cube.vy += gravity * deltaSeconds;
+          cube.vx += cube.ax * deltaSeconds;
+          cube.vy += cube.ay * deltaSeconds;
+          cube.x += cube.vx * deltaSeconds;
           cube.y += cube.vy * deltaSeconds;
 
-          if (now >= cube.expiresAt || cube.y > height + cube.size) {
+          const outOfBounds =
+            cube.x < -cube.size ||
+            cube.x > width + cube.size ||
+            cube.y < -cube.size ||
+            cube.y > height + cube.size;
+          if (now >= cube.expiresAt || outOfBounds) {
             missesTotal += 1;
-            addLifePopup(cube.x + cube.size / 2, cube.y);
+            addLifePopup(cube.x + cube.size / 2, cube.y + cube.size / 2);
           } else {
             nextCubes.push(cube);
           }
@@ -356,7 +430,7 @@ export function ShotCubeGame({
 
   const handleShot = useCallback(
     (event) => {
-      if (controlsLocked) return;
+      if (controlsLocked || countdown > 0) return;
       const canvas = canvasRef.current;
       if (!canvas) return;
       const rect = canvas.getBoundingClientRect();
@@ -365,9 +439,8 @@ export function ShotCubeGame({
       pointerRef.current = { x, y, active: true };
 
       if (statusRef.current !== "running") {
-        if (!allowStartRef.current) return;
-        allowStartRef.current = false;
-        startGame({ skipReset: true });
+        draw();
+        return;
       }
 
       const cubes = cubesRef.current;
@@ -406,7 +479,7 @@ export function ShotCubeGame({
 
       draw();
     },
-    [addPopup, controlsLocked, draw, registerMiss, startGame]
+    [addPopup, controlsLocked, countdown, draw, registerMiss]
   );
 
   useEffect(() => {
@@ -450,6 +523,19 @@ export function ShotCubeGame({
   }, [status, stepGame]);
 
   useEffect(() => {
+    if (countdown <= 0) return undefined;
+    const timeout = window.setTimeout(() => {
+      setCountdown((prev) => Math.max(0, prev - 1));
+    }, 1000);
+    return () => window.clearTimeout(timeout);
+  }, [countdown]);
+
+  useEffect(() => {
+    if (countdown !== 0 || status !== "countdown") return;
+    startGame({ skipReset: true });
+  }, [countdown, startGame, status]);
+
+  useEffect(() => {
     const handleResize = () => {
       const canvas = canvasRef.current;
       if (!canvas) return;
@@ -462,7 +548,7 @@ export function ShotCubeGame({
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
       boardRef.current = { width: rect.width, height: rect.height };
-      resetBoard();
+      resetBoard({ skipSpawn: statusRef.current === "countdown" });
     };
 
     handleResize();
@@ -472,10 +558,8 @@ export function ShotCubeGame({
 
   useEffect(() => {
     if (!startSignal) return;
-    allowStartRef.current = true;
-    resetBoard();
-    setStatus("idle");
-  }, [resetBoard, startSignal]);
+    beginCountdown();
+  }, [beginCountdown, startSignal]);
 
   const livesLeft = Math.max(0, MAX_MISSES - misses);
   const wrapperClassName = fullScreen
@@ -501,6 +585,14 @@ export function ShotCubeGame({
   const overlayClassName = fullScreen
     ? "pointer-events-none absolute inset-0 flex items-center justify-center bg-[rgba(4,6,12,0.55)] text-sm uppercase tracking-[0.2em] text-white/80"
     : "pointer-events-none absolute inset-0 flex items-center justify-center rounded-2xl bg-[rgba(4,6,12,0.55)] text-sm uppercase tracking-[0.2em] text-white/80";
+  const overlayLabel =
+    status === "countdown"
+      ? countdown > 0
+        ? String(countdown)
+        : "YA"
+      : status === "gameover"
+        ? "Game Over"
+        : "Listo";
 
   return (
     <div className={wrapperClassName}>
@@ -540,7 +632,7 @@ export function ShotCubeGame({
           <canvas className={canvasClassName} ref={canvasRef} />
           {status !== "running" ? (
             <div className={overlayClassName}>
-              {status === "gameover" ? "Game Over" : "Listo"}
+              {overlayLabel}
             </div>
           ) : null}
 
