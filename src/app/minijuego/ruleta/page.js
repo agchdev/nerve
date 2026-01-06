@@ -311,6 +311,7 @@ export default function RuletaPage() {
               Ruleta
             </p>
             <RouletteRoundStatus gameId={game?.id} />
+            
             <RouletteBettingTable />
           </>
         ) : (

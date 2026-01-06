@@ -112,18 +112,18 @@ export function RouletteNumberTicker({ targetNumber, isSpinning = false }) {
   return (
     <div
       ref={viewportRef}
-      className="relative mx-auto mt-3 w-full max-w-[260px] overflow-hidden rounded-2xl border border-white/15 bg-[rgba(6,8,16,0.6)] px-2 py-2 shadow-[0_12px_26px_rgba(5,8,18,0.45)] sm:max-w-[300px]"
+      className="relative mx-auto mt-3 w-full max-w-[260px] overflow-hidden px-2 py-2  sm:max-w-[750px]"
     >
       <div ref={trackRef} className="flex items-center gap-1">
         {numbers.map((item, index) => {
           const tone = PURPLE_NUMBERS.has(item.value) ? "purple" : "blue";
           const isActive = index === finalIndex;
           const baseClass =
-            "flex h-9 w-9 shrink-0 items-center justify-center rounded-md border text-[11px] font-semibold uppercase tracking-[0.16em] sm:h-10 sm:w-10 sm:text-xs";
+            "flex h-9 w-9 shrink-0 items-center justify-center rounded-md border text-[11px] sm:text-[30px] font-semibold uppercase tracking-[0.16em] sm:h-30 sm:w-30 sm:text-xs";
           const toneClass =
             tone === "purple"
-              ? "border-[#ff9ffc]/70 text-[#ff9ffc] shadow-[0_0_16px_rgba(255,159,252,0.45)] bg-[rgba(32,10,46,0.85)]"
-              : "border-[#6fd6ff]/70 text-[#6fd6ff] shadow-[0_0_16px_rgba(111,214,255,0.45)] bg-[rgba(8,18,36,0.85)]";
+              ? "border-[#ff9ffc]/70 text-[#ff9ffc] bg-[rgba(32,10,46,0.85)]"
+              : "border-[#6fd6ff]/70 text-[#6fd6ff] bg-[rgba(8,18,36,0.85)]";
           const activeClass =
             !isSpinning && isActive ? "ring-2 ring-white/70" : "";
 
@@ -138,9 +138,11 @@ export function RouletteNumberTicker({ targetNumber, isSpinning = false }) {
           );
         })}
       </div>
+      {/*
       <div className="pointer-events-none absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-[#07040f] via-[rgba(7,4,15,0.85)] to-transparent" />
       <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-[#07040f] via-[rgba(7,4,15,0.85)] to-transparent" />
       <div className="pointer-events-none absolute inset-y-2 left-1/2 w-px -translate-x-1/2 bg-white/70 shadow-[0_0_10px_rgba(255,255,255,0.55)]" />
+      */}
     </div>
   );
 }

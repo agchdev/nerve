@@ -16,6 +16,7 @@ const HISTORY_LIMIT = 12;
 
 const clampNumber = (value, min, max) => Math.min(Math.max(value, min), max);
 
+
 const formatResult = (data) => {
   if (
     !data ||
@@ -47,18 +48,18 @@ const DEFAULT_STATUS = {
 const roundToStatus = (round) =>
   round
     ? {
-        estado: round?.estado ?? "sin_ronda",
-        numero_ganador:
-          round?.numero_ganador !== null && round?.numero_ganador !== undefined
-            ? Number(round.numero_ganador)
-            : null,
-        color_ganador: round?.color_ganador ?? null,
-        paridad_ganadora: round?.paridad_ganadora ?? null,
-        rango_ganador: round?.rango_ganador ?? null,
-        inicio_en: round?.inicio_en ?? null,
-        cierre_en: round?.cierre_en ?? null,
-        resuelta_en: round?.resuelta_en ?? null,
-      }
+      estado: round?.estado ?? "sin_ronda",
+      numero_ganador:
+        round?.numero_ganador !== null && round?.numero_ganador !== undefined
+          ? Number(round.numero_ganador)
+          : null,
+      color_ganador: round?.color_ganador ?? null,
+      paridad_ganadora: round?.paridad_ganadora ?? null,
+      rango_ganador: round?.rango_ganador ?? null,
+      inicio_en: round?.inicio_en ?? null,
+      cierre_en: round?.cierre_en ?? null,
+      resuelta_en: round?.resuelta_en ?? null,
+    }
     : DEFAULT_STATUS;
 
 const getSecondsRemaining = (round, now) => {
@@ -82,6 +83,12 @@ export function RouletteRoundStatus({ gameId }) {
   const [loadError, setLoadError] = useState("");
   const [historyError, setHistoryError] = useState("");
   const lastNumberRef = useRef(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [oldNumber, setOldNumber] = useState(null);
+
+  useEffect(() => {
+    setModalOpen(!modalOpen);
+  }, [status])
 
   useEffect(() => {
     let isMounted = true;
@@ -183,7 +190,7 @@ export function RouletteRoundStatus({ gameId }) {
   }, [status.estado, status.numero_ganador]);
 
   const label = STAGE_LABELS[status.estado] || "Sin ronda activa";
-  const isSpinning = status.estado === "abierta" || status.estado === "cerrada";
+  const isSpinning = status.estado === "cerrada";
   const secondsRemaining = getSecondsRemaining(status, now);
   const countdown =
     typeof secondsRemaining === "number" ? `${secondsRemaining}s` : "--";
@@ -207,7 +214,17 @@ export function RouletteRoundStatus({ gameId }) {
     "border-white/15 text-white/40 shadow-[0_0_10px_rgba(255,255,255,0.08)] bg-[rgba(8,12,22,0.6)]";
 
   return (
-    <div className="mt-4 w-full text-left">
+    <>
+    <div>
+      {modalOpen && (<div className="modal">
+        <div className="modal-content">
+          <span className="close" onClick={() => setModalOpen(false)}>&times;</span>
+          <p>Modal is open!</p>
+        </div>
+      </div>
+      )}
+    </div>
+    <div className="mt-4 w-full p-5 text-left ">
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
         <div className="flex-1">
           <div className="flex flex-wrap items-center justify-between gap-4">
@@ -240,14 +257,7 @@ export function RouletteRoundStatus({ gameId }) {
         </div>
 
         <div className="w-full lg:w-[240px] lg:flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <p className="text-[11px] uppercase tracking-[0.24em] text-white/60">
-              Historial de numeros
-            </p>
-            <span className="text-[10px] uppercase tracking-[0.2em] text-white/40">
-              Ultimos {history.length}
-            </span>
-          </div>
+
           <div className="mt-3 rounded-2xl border border-white/10 bg-[rgba(8,12,22,0.55)] px-4 py-4">
             <p className="text-[10px] text-center uppercase tracking-[0.2em] text-white/50">
               Ultimo numero
@@ -307,5 +317,6 @@ export function RouletteRoundStatus({ gameId }) {
         </div>
       </div>
     </div>
+    </>
   );
 }

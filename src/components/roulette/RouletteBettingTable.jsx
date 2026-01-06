@@ -127,14 +127,6 @@ export function RouletteBettingTable() {
   return (
     <section className="mt-4 w-full text-left">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="text-[11px] uppercase tracking-[0.24em] text-white/60">
-            Mesa de apuestas
-          </p>
-          <p className="mt-1 text-sm text-white/70">
-            Tablero base con colores neon azul y morado.
-          </p>
-        </div>
         <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.2em] text-white/60">
           <span className="flex items-center gap-2">
             <span className="h-3 w-3 rounded-full bg-[#6fd6ff] shadow-[0_0_10px_rgba(111,214,255,0.8)]"></span>
